@@ -1,0 +1,9 @@
+time="2025-04-20T18:03:00+08:00" level=error msg="handler.Register format error, error is EOF"
+time="2025-04-20T18:04:54+08:00" level=error msg="handler.Register format error, error is invalid character '-' in numeric literal"
+time="2025-04-20T18:08:42+08:00" level=error msg="handler.Register format error, error is invalid character '-' in numeric literal"
+time="2025-04-20T22:56:50+08:00" level=info msg="日志初始化成功"
+time="2025-04-20T22:57:00+08:00" level=info msg="Request: GET /api/Captcha"
+time="2025-04-20T22:57:00+08:00" level=info msg="Response status: 200"
+time="2025-04-20T22:59:57+08:00" level=info msg="日志初始化成功"
+time="2025-04-20T23:00:05+08:00" level=info msg="Request received" ip=127.0.0.1 method=GET path=/api/Captcha protocol=HTTP/1.1 referer= user_agent=PostmanRuntime/7.43.3
+time="2025-04-20T23:00:05+08:00" level=info msg="Request completed" bytes=2609 client_ip=127.0.0.1 latency=1.0231ms method=GET path=/api/Captcha status=200

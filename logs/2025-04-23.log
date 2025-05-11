@@ -1,0 +1,8 @@
+time="2025-04-23T15:41:08+08:00" level=info msg="日志初始化成功"
+time="2025-04-23T15:43:50+08:00" level=info msg="Request received" ip="::1" method=POST path=/api/team protocol=HTTP/1.1 referer= user_agent=PostmanRuntime/7.43.3
+time="2025-04-23T15:43:50+08:00" level=info msg="Request completed" bytes=54 client_ip="::1" latency=21.3743ms method=POST path=/api/team status=200
+time="2025-04-23T15:44:53+08:00" level=info msg="Request received" ip="::1" method=GET path=/api/team protocol=HTTP/1.1 referer= user_agent=PostmanRuntime/7.43.3
+time="2025-04-23T15:44:53+08:00" level=info msg="Request completed" bytes=157 client_ip="::1" latency=1.0972ms method=GET path=/api/team status=200
+time="2025-04-23T16:03:04+08:00" level=info msg="日志初始化成功"
+time="2025-04-23T16:04:14+08:00" level=info msg="Request received" ip="::1" method=POST path=/api/donation protocol=HTTP/1.1 referer= user_agent=PostmanRuntime/7.43.3
+time="2025-04-23T16:04:14+08:00" level=info msg="Request completed" bytes=54 client_ip="::1" latency=28.6854ms method=POST path=/api/donation status=200
