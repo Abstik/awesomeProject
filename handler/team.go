@@ -36,8 +36,21 @@ func GetTeams(c *gin.Context) {
 		isExist = &isExistValue
 	}
 
+	// 用户校验
+	_, ok := c.Get("userID")
+	if !ok {
+		// 如果是游客
+		teams, err := service.GetTeams(name, isExist, false)
+		if err != nil {
+			utils.BuildErrorResponse(c, 500, "GetTeams get failed err is: "+err.Error())
+			return
+		}
+		utils.BuildSuccessResponse(c, teams)
+		return
+	}
+
 	// 调用 service 层
-	teams, err := service.GetTeams(name, isExist)
+	teams, err := service.GetTeams(name, isExist, true)
 	if err != nil {
 		utils.BuildErrorResponse(c, 500, "GetTeams get failed err is: "+err.Error())
 		return

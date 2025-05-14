@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/mojocn/base64Captcha"
 	"time"
+
+	"github.com/mojocn/base64Captcha"
 )
 
 // 全局存储器，设置过期时间为 1 分钟

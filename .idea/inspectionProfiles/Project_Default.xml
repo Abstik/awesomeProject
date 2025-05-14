@@ -2,5 +2,10 @@
   <profile version="1.0">
     <option name="myName" value="Project Default" />
     <inspection_tool class="GoCommentStart" enabled="true" level="INFORMATION" enabled_by_default="true" />
+    <inspection_tool class="GoDfaErrorMayBeNotNil" enabled="true" level="WARNING" enabled_by_default="true">
+      <functions>
+        <function importPath="awesomeProject/dao" name="GetQQ" />
+      </functions>
+    </inspection_tool>
   </profile>
 </component>

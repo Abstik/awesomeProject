@@ -17,7 +17,7 @@ func AddTeam(req model.AddTeamReq) error {
 	return dao.InsertTeam(team)
 }
 
-func GetTeams(name string, isExist *bool) ([]model.TeamPO, error) {
+func GetTeams(name string, isExist *bool, isUser bool) ([]model.TeamPO, error) {
 	// 调用 DAO 层查询
-	return dao.QueryTeams(name, isExist)
+	return dao.QueryTeams(name, isExist, isUser)
 }

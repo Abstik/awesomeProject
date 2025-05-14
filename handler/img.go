@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"awesomeProject/utils"
 	"fmt"
 	"image"
 	"image/draw"
@@ -14,6 +13,8 @@ import (
 
 	"github.com/disintegration/imaging" // 用于简化图像操作
 	"github.com/gin-gonic/gin"
+
+	"awesomeProject/utils"
 )
 
 // 定义图片存储目录

@@ -7,19 +7,13 @@ import (
 	"awesomeProject/model"
 )
 
-func GetActivityList(pageSize *int, pageNum *int) ([]*model.ActivityPO, error) {
-	if pageSize != nil && pageNum != nil {
-		res, err := dao.GetActivityListByPage(*pageSize, *pageNum)
-		if err != nil {
-			return nil, err
-		}
-		return res, nil
-	}
-	res, err := dao.GetActivityList()
+func GetActivityList(pageSize *int, pageNum *int) ([]*model.ActivityPO, int64, error) {
+	// 分页查询活动
+	res, total, err := dao.GetActivityListByPage(*pageSize, *pageNum)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return res, nil
+	return res, total, nil
 }
 
 func GetActivityByAid(aid int64) (*model.ActivityPO, error) {

@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
+	"awesomeProject/dao"
 	"awesomeProject/model"
 	"awesomeProject/service"
 	"awesomeProject/utils"
@@ -22,4 +23,19 @@ func AddDonations(c *gin.Context) {
 	}
 
 	utils.BuildSuccessResponse(c, "添加成功")
+}
+
+// 根据year查询捐款信息
+func GetDonations(c *gin.Context) {
+	year := c.Query("year")
+	if year == "" {
+		utils.BuildErrorResponse(c, 400, "GetDonations year is empty")
+		return
+	}
+	donations, err := dao.GetDonations(year)
+	if err != nil {
+		utils.BuildErrorResponse(c, 500, "GetDonations err is: "+err.Error())
+		return
+	}
+	utils.BuildSuccessResponse(c, donations)
 }

@@ -18,8 +18,8 @@ func (*ActivityPO) TableName() string {
 }
 
 type ActivityListReq struct {
-	PageSize int64 `json:"page_size,omitempty"`
-	PageNum  int64 `json:"page_num,omitempty"`
+	PageSize int64 `json:"pageSize,omitempty"`
+	PageNum  int64 `json:"pageNum,omitempty"`
 }
 
 type AddActivityReq struct {
