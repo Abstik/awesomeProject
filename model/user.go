@@ -42,22 +42,22 @@ type UpdateMemberRequest struct {
 // 数据库实体结构体
 type MemberPO struct {
 	UID         int       `gorm:"primaryKey;column:uid" json:"uid"` // 自增主键
-	Username    *string   `gorm:"column:username" json:"userName"`  // 非空，与UID构成联合唯一索引，用户名的中文拼音
+	Username    *string   `gorm:"column:username" json:"username"`  // 非空，与UID构成联合唯一索引，用户名的中文拼音
 	Password    *string   `gorm:"column:password" json:"-"`
-	Name        *string   `gorm:"column:name" json:"name,omitempty"`                // 中文用户名
-	Tel         *string   `gorm:"column:tel" json:"tel,omitempty"`                  // 手机号
-	Gender      *int      `gorm:"column:gender" json:"gender,omitempty"`            // 性别，0为男生，1为女生
-	ClassGrade  *string   `gorm:"column:class_grade" json:"classGrade,omitempty"`   // 专业班级
-	Team        *string   `gorm:"column:team" json:"team,omitempty"`                // 组别
-	Portrait    *string   `gorm:"column:portrait" json:"portrait,omitempty"`        // 肖像，有默认值
-	MienImg     *string   `gorm:"column:mien_img" json:"mienImg,omitempty"`         // 风采图片，有默认值
-	Company     *string   `gorm:"column:company" json:"company,omitempty"`          // 入职公司
-	GraduateImg *string   `gorm:"column:graduate_img" json:"graduateImg,omitempty"` // 毕业照，有默认值
-	IsGraduate  *int      `gorm:"column:is_graduate" json:"isGraduate,omitempty"`   // 是否毕业，0未毕业，1已毕业，默认为0
-	Signature   *string   `gorm:"column:signature" json:"signature,omitempty"`      // 个性签名
-	Year        *int      `gorm:"column:year" json:"year,omitempty"`                // 入学年份
-	Status      *int      `gorm:"column:status" json:"status,omitempty"`            // 0管理员，1已毕业，2未毕业
-	ModifyTime  time.Time `gorm:"column:modify_time;autoUpdateTime" json:"modifyTime,omitempty"`
+	Name        *string   `gorm:"column:name" json:"name"`                // 中文用户名
+	Tel         *string   `gorm:"column:tel" json:"tel"`                  // 手机号
+	Gender      *int      `gorm:"column:gender" json:"gender"`            // 性别，0为男生，1为女生
+	ClassGrade  *string   `gorm:"column:class_grade" json:"classGrade"`   // 专业班级
+	Team        *string   `gorm:"column:team" json:"team"`                // 组别
+	Portrait    *string   `gorm:"column:portrait" json:"portrait"`        // 肖像，有默认值
+	MienImg     *string   `gorm:"column:mien_img" json:"mienImg"`         // 风采图片，有默认值
+	Company     *string   `gorm:"column:company" json:"company"`          // 入职公司
+	GraduateImg *string   `gorm:"column:graduate_img" json:"graduateImg"` // 毕业照，有默认值
+	IsGraduate  *int      `gorm:"column:is_graduate" json:"isGraduate"`   // 是否毕业，0未毕业，1已毕业，默认为0
+	Signature   *string   `gorm:"column:signature" json:"signature"`      // 个性签名
+	Year        *int      `gorm:"column:year" json:"year"`                // 入学年份
+	Status      *int      `gorm:"column:status" json:"status"`            // 0管理员，1已毕业，2未毕业
+	ModifyTime  time.Time `gorm:"column:modify_time;autoUpdateTime" json:"-"`
 }
 
 // TableName 指定表名

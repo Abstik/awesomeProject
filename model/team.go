@@ -1,12 +1,12 @@
 package model
 
 type TeamPO struct {
-	Tid       int     `gorm:"column:tid;primaryKey;autoIncrement" json:"tid"`
+	Tid       int     `gorm:"column:tid;primaryKey;autoIncrement" json:"tid,omitempty"`
 	Name      *string `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	BrefInfo  *string `gorm:"column:bref_info;type:text" json:"brefInfo"`
-	TrainPlan *string `gorm:"column:train_plan;type:text" json:"trainPlan"`
+	TrainPlan *string `gorm:"column:train_plan;type:text" json:"trainPlan,omitempty"`
 	IsExist   *bool   `gorm:"column:is_exist;not null" json:"isExist"`
-	Delay     int64   `gorm:"column:delay" json:"delay"`
+	Delay     int64   `gorm:"column:delay" json:"delay,omitempty"`
 }
 
 func (*TeamPO) TableName() string {

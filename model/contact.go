@@ -1,8 +1,8 @@
 package model
 
 type ContactPO struct {
-	Tid         int    `gorm:"primaryKey;column:tid" json:"-"`
-	ContactInfo string `gorm:"column:contactInfo" json:"qqnumber"`
+	Tid         int    `gorm:"primaryKey;column:id" json:"-"`
+	ContactInfo string `gorm:"column:contact_info" json:"qqnumber"`
 }
 
 func (*ContactPO) TableName() string {

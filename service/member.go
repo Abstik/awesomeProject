@@ -75,11 +75,9 @@ func Login(req *model.MemberRequest) (gin.H, error) {
 	return response, err
 }
 
-// 根据组别和毕业状态批量查询成员
-func GetMemberList(team *string, isGraduate *int) ([]model.MemberPO, error) {
-	res, err := dao.GetMemberList(team, isGraduate)
-	// 按照team排序一下
-
+// 批量查询成员
+func GetMemberList(team *string, isGraduate, pageSize, pageNum *int) ([]model.MemberPO, error) {
+	res, err := dao.GetMemberList(team, isGraduate, pageSize, pageNum)
 	if err != nil {
 		return nil, err
 	}

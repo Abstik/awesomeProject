@@ -63,23 +63,30 @@ func Login(c *gin.Context) {
 
 // 获取用户列表
 func GetMemberList(c *gin.Context) {
-	team := c.Query("team")
-	isGraduate := c.Query("isGraduate")
-	var teamQuery *string
-	var isGraduateQuery *int
-	if team != "" {
-		teamQuery = &team
+	teamStr := c.Query("team")
+	isGraduateStr := c.Query("isGraduate")
+	pageSizeStr := c.Query("pageSize")
+	pageNumStr := c.Query("pageNum")
+
+	var pageSize, pageNum, isGraduate *int
+	var team *string
+	if isGraduateStr != "" {
+		isGraduateInt, _ := strconv.Atoi(isGraduateStr)
+		isGraduate = &isGraduateInt
 	}
-	if isGraduate != "" {
-		isGraduateInt, err := strconv.Atoi(isGraduate)
-		if err != nil {
-			utils.BuildErrorResponse(c, 500, "GetMemberList parse isGraduate failed err is: "+err.Error())
-			return
-		}
-		isGraduateQuery = &isGraduateInt
+	if pageSizeStr != "" {
+		pageSizeInt, _ := strconv.Atoi(pageSizeStr)
+		pageSize = &pageSizeInt
+	}
+	if pageNumStr != "" {
+		pageNumInt, _ := strconv.Atoi(pageNumStr)
+		pageNum = &pageNumInt
+	}
+	if teamStr != "" {
+		team = &teamStr
 	}
 
-	res, err := service.GetMemberList(teamQuery, isGraduateQuery)
+	res, err := service.GetMemberList(team, isGraduate, pageSize, pageNum)
 	if err != nil {
 		utils.BuildErrorResponse(c, 500, "GetMemberList failed err is: "+err.Error())
 		return
@@ -126,9 +133,9 @@ func ChangeMemberInfo(c *gin.Context) {
 
 // 根据用户名获取用户信息
 func GetMemberByName(c *gin.Context) {
-	userName, ok := c.Get("userName")
+	userName, ok := c.Get("username")
 	if !ok {
-		utils.BuildErrorResponse(c, 500, "userName is not found")
+		utils.BuildErrorResponse(c, 500, "username is not found")
 		return
 	}
 
