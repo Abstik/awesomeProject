@@ -13,9 +13,14 @@ func InsertMember(mem *model.MemberPO) error {
 }
 
 // 根据组别和毕业状态批量查询成员
-func GetMemberList(team *string, isGraduate, pageSize, pageNum *int) ([]model.MemberPO, error) {
+func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]model.MemberPO, int64, error) {
 	var members []model.MemberPO
+	var total int64
 	query := db.Model(&model.MemberPO{})
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
 
 	if team != nil {
 		query = query.Where("team = ?", *team)
@@ -26,16 +31,14 @@ func GetMemberList(team *string, isGraduate, pageSize, pageNum *int) ([]model.Me
 	if pageSize != nil && pageNum != nil {
 		query = query.Limit(*pageSize).Offset((*pageNum - 1) * (*pageSize))
 	}
+	if year != nil {
+		query = query.Where("year = ?", *year)
+	}
 
 	if err := query.Find(&members).Error; err != nil {
-		return nil, fmt.Errorf("failed to query members: %v", err)
+		return nil, 0, err
 	}
-	for i := range members {
-		portrait := "//mobile.xupt.edu.cn/" + *members[i].Portrait
-		members[i].Portrait = &portrait
-	}
-
-	return members, nil
+	return members, total, nil
 }
 
 // 根据用户名查询用户
@@ -45,10 +48,6 @@ func GetMemberByUsername(userName string) (*model.MemberPO, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
-	portrait := "//mobile.xupt.edu.cn/" + *member.Portrait
-	member.Portrait = &portrait
-
 	return &member, nil
 }
 
@@ -76,4 +75,18 @@ func UpdateMember(member *model.MemberPO) error {
 	}
 
 	return nil
+}
+
+func GetYears() ([]int, error) {
+	var years []int
+	err := db.Model(&model.MemberPO{}).
+		Distinct("year").
+		Where("is_graduate = ?", 1).
+		Pluck("year", &years).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return years, nil
 }

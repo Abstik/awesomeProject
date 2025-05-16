@@ -76,12 +76,12 @@ func Login(req *model.MemberRequest) (gin.H, error) {
 }
 
 // 批量查询成员
-func GetMemberList(team *string, isGraduate, pageSize, pageNum *int) ([]model.MemberPO, error) {
-	res, err := dao.GetMemberList(team, isGraduate, pageSize, pageNum)
+func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]model.MemberPO, int64, error) {
+	res, total, err := dao.GetMemberList(team, isGraduate, pageSize, pageNum, year)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return res, nil
+	return res, total, nil
 }
 
 // 根据用户名获取用户信息
@@ -137,4 +137,9 @@ func UpdateMember(req model.UpdateMemberRequest, statusInt int) error {
 	}
 
 	return nil
+}
+
+func GetYears() ([]int, error) {
+	years, err := dao.GetYears()
+	return years, err
 }

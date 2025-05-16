@@ -6,7 +6,7 @@ type TeamPO struct {
 	BrefInfo  *string `gorm:"column:bref_info;type:text" json:"brefInfo"`
 	TrainPlan *string `gorm:"column:train_plan;type:text" json:"trainPlan,omitempty"`
 	IsExist   *bool   `gorm:"column:is_exist;not null" json:"isExist"`
-	Delay     int64   `gorm:"column:delay" json:"delay,omitempty"`
+	Delay     int64   `gorm:"column:delay" json:"delay"`
 }
 
 func (*TeamPO) TableName() string {

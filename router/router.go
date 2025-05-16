@@ -47,6 +47,8 @@ func SetupRegisterRouter(r *gin.Engine) {
 		apiGroup.GET("/members", handler.GetMemberList)
 		// 添加成员
 		apiGroup.POST("/members", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.Register)
+		// 查询毕业生的所有年份
+		apiGroup.GET("/years", handler.GetYears)
 	}
 
 	{

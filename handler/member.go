@@ -67,8 +67,9 @@ func GetMemberList(c *gin.Context) {
 	isGraduateStr := c.Query("isGraduate")
 	pageSizeStr := c.Query("pageSize")
 	pageNumStr := c.Query("pageNum")
+	yearStr := c.Query("year")
 
-	var pageSize, pageNum, isGraduate *int
+	var pageSize, pageNum, isGraduate, year *int
 	var team *string
 	if isGraduateStr != "" {
 		isGraduateInt, _ := strconv.Atoi(isGraduateStr)
@@ -85,13 +86,20 @@ func GetMemberList(c *gin.Context) {
 	if teamStr != "" {
 		team = &teamStr
 	}
+	if yearStr != "" {
+		yearInt, _ := strconv.Atoi(yearStr)
+		year = &yearInt
+	}
 
-	res, err := service.GetMemberList(team, isGraduate, pageSize, pageNum)
+	res, total, err := service.GetMemberList(team, isGraduate, pageSize, pageNum, year)
 	if err != nil {
 		utils.BuildErrorResponse(c, 500, "GetMemberList failed err is: "+err.Error())
 		return
 	}
-	utils.BuildSuccessResponse(c, res)
+	utils.BuildSuccessResponse(c, gin.H{
+		"data":  res,
+		"total": total,
+	})
 }
 
 func AddMember(c *gin.Context) {
@@ -152,4 +160,14 @@ func GetMemberByName(c *gin.Context) {
 
 	// 返回成功响应
 	utils.BuildSuccessResponse(c, member)
+}
+
+func GetYears(c *gin.Context) {
+	years, err := service.GetYears()
+	if err != nil {
+		utils.BuildErrorResponse(c, 500, "GetYears failed err is: "+err.Error())
+		return
+	}
+	utils.BuildSuccessResponse(c, years)
+	return
 }
