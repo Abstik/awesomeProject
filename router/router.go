@@ -78,7 +78,7 @@ func SetupRegisterRouter(r *gin.Engine) {
 
 	{
 		// 上传图片附带水印
-		apiGroup.POST("/uploadImgWithWaterMark", handler.UploadImgWithWaterMark)
+		apiGroup.POST("/uploadImgWithWaterMark", middleware.JWTAuthMiddleware(), handler.UploadImgWithWaterMark)
 	}
 
 	{

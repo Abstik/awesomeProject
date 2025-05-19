@@ -56,7 +56,7 @@ type MemberPO struct {
 	IsGraduate  *int      `gorm:"column:is_graduate" json:"isGraduate"`   // 是否毕业，0未毕业，1已毕业，默认为0
 	Signature   *string   `gorm:"column:signature" json:"signature"`      // 个性签名
 	Year        *int      `gorm:"column:year" json:"year"`                // 入学年份
-	Status      *int      `gorm:"column:status" json:"status"`            // 0管理员，1已毕业，2未毕业
+	Status      *int      `gorm:"column:status" json:"status"`            // 0为管理员，1为用户，默认为1
 	ModifyTime  time.Time `gorm:"column:modify_time;autoUpdateTime" json:"-"`
 }
 

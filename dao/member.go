@@ -12,15 +12,11 @@ func InsertMember(mem *model.MemberPO) error {
 	return result.Error
 }
 
-// 根据组别和毕业状态批量查询成员
+// 根据条件批量查询成员
 func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]model.MemberPO, int64, error) {
 	var members []model.MemberPO
 	var total int64
 	query := db.Model(&model.MemberPO{})
-	err := query.Count(&total).Error
-	if err != nil {
-		return nil, 0, err
-	}
 
 	if team != nil {
 		query = query.Where("team = ?", *team)
@@ -33,6 +29,11 @@ func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]mo
 	}
 	if year != nil {
 		query = query.Where("year = ?", *year)
+	}
+
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
 	}
 
 	if err := query.Find(&members).Error; err != nil {
