@@ -102,33 +102,48 @@ func UpdateMember(req model.UpdateMemberRequest, statusInt int) error {
 	}
 
 	// 判断请求用户是否和修改用户是否一致
-	if member.UID != req.UID {
+	if *member.Username != *req.Username {
 		if statusInt != 0 {
 			return errors.New("无权限")
 		}
 	}
 
 	// 更新用户字段（仅更新非空字段）
-	if req.Portrait != nil {
-		member.Portrait = req.Portrait
+	if req.Name != nil {
+		member.Name = req.Name
+	}
+	if req.Tel != nil {
+		member.Tel = req.Tel
+	}
+	if req.Gender != nil {
+		member.Gender = req.Gender
 	}
 	if req.ClassGrade != nil {
 		member.ClassGrade = req.ClassGrade
 	}
-	if req.Phone != nil {
-		member.Tel = req.Phone
-	}
-	if req.Name != nil {
-		member.Name = req.Name
-	}
 	if req.Team != nil {
 		member.Team = req.Team
+	}
+	if req.Portrait != nil {
+		member.Portrait = req.Portrait
 	}
 	if req.MienImg != nil {
 		member.MienImg = req.MienImg
 	}
+	if req.Company != nil {
+		member.Company = req.Company
+	}
+	if req.GraduateImg != nil {
+		member.GraduateImg = req.GraduateImg
+	}
+	if req.IsGraduate != nil {
+		member.IsGraduate = req.IsGraduate
+	}
 	if req.Signature != nil {
 		member.Signature = req.Signature
+	}
+	if req.Year != nil {
+		member.Year = req.Year
 	}
 
 	// 调用 DAO 层保存更新

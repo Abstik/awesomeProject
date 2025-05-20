@@ -28,15 +28,19 @@ type MemberRequest struct {
 
 // 更新用户信息的请求体
 type UpdateMemberRequest struct {
-	UID        int     `json:"uid"`                  // 主键，必填
-	Portrait   *string `json:"portrait,omitempty"`   // 用户头像
-	ClassGrade *string `json:"classGrade,omitempty"` // 专业班级
-	Phone      *string `json:"phone,omitempty"`      // 电话
-	Username   *string `json:"username,omitempty"`   // 用户名
-	Name       *string `json:"name,omitempty"`       // 姓名
-	Team       *string `json:"team,omitempty"`       // 组别
-	MienImg    *string `json:"mienImg,omitempty"`    // 风采图片
-	Signature  *string `json:"signature,omitempty"`  // 个性签名
+	Username    *string `json:"username"`    // 用户名
+	Name        *string `json:"name"`        // 姓名
+	Tel         *string `json:"tel"`         // 电话
+	Gender      *int    `json:"gender"`      // 性别，0为男生，1为女生
+	ClassGrade  *string `json:"classGrade"`  // 专业班级
+	Team        *string `json:"team"`        // 组别
+	Portrait    *string `json:"portrait"`    // 用户头像
+	MienImg     *string `json:"mienImg"`     // 风采图片
+	Company     *string `json:"company"`     // 入职公司
+	GraduateImg *string `json:"graduateImg"` // 毕业照，有默认值
+	IsGraduate  *int    `json:"isGraduate"`  // 是否毕业，0未毕业，1已毕业，默认为0
+	Signature   *string `json:"signature"`   // 个性签名
+	Year        *int    `json:"year"`        // 入学年份
 }
 
 // 数据库实体结构体

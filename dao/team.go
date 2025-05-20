@@ -22,7 +22,7 @@ func QueryTeams(name string, isExist *bool, isUser bool) ([]model.TeamPO, error)
 	}
 
 	// 用户或管理员：添加查询条件和完整字段
-	query := db.Select("name, bref_info, train_plan, is_exist")
+	query := db.Select("name, bref_info, train_plan, is_exist, delay")
 
 	if name != "" {
 		query = query.Where("name LIKE ?", name)

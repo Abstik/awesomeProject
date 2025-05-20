@@ -83,6 +83,7 @@ func GetYears() ([]int, error) {
 	err := db.Model(&model.MemberPO{}).
 		Distinct("year").
 		Where("is_graduate = ?", 1).
+		Order("year DESC").
 		Pluck("year", &years).Error
 
 	if err != nil {

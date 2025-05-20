@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -106,8 +105,6 @@ func GetMemberList(c *gin.Context) {
 		utils.BuildErrorResponse(c, 500, "GetMemberList failed err is: "+err.Error())
 		return
 	}
-
-	fmt.Println(res)
 
 	utils.BuildSuccessResponse(c, gin.H{
 		"data":  res,
