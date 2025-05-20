@@ -67,6 +67,8 @@ func SetupRegisterRouter(r *gin.Engine) {
 		apiGroup.GET("/team", handler.GetTeams)
 		// 查询实验室方向（用户和管理员）
 		apiGroup.GET("/team/allinfo", middleware.JWTAuthMiddleware(), handler.GetTeams)
+		// 修改实验室方向
+		apiGroup.PUT("/team", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.UpdateTeam)
 	}
 
 	{

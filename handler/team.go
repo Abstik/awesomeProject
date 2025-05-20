@@ -57,3 +57,16 @@ func GetTeams(c *gin.Context) {
 
 	utils.BuildSuccessResponse(c, teams)
 }
+
+func UpdateTeam(c *gin.Context) {
+	req := model.AddTeamReq{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BuildErrorResponse(c, 500, "UpdateTeam parse failed err is: "+err.Error())
+	}
+
+	err := service.UpdateTeam(req)
+	if err != nil {
+		utils.BuildErrorResponse(c, 500, "UpdateTeam update failed err is: "+err.Error())
+	}
+	utils.BuildSuccessResponse(c, "更新成功")
+}

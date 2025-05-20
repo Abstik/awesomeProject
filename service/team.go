@@ -18,6 +18,20 @@ func AddTeam(req model.AddTeamReq) error {
 }
 
 func GetTeams(name string, isExist *bool, isUser bool) ([]model.TeamPO, error) {
-	// 调用 DAO 层查询
-	return dao.QueryTeams(name, isExist, isUser)
+	teamPOs, err := dao.QueryTeams(name, isExist, isUser)
+	if err != nil {
+		return nil, err
+	}
+
+	delay := 0
+	for i := range teamPOs {
+		teamPOs[i].Delay = delay
+		delay += 100
+	}
+
+	return teamPOs, nil
+}
+
+func UpdateTeam(req model.AddTeamReq) error {
+	return dao.UpdateTeam(req)
 }
