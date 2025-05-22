@@ -26,20 +26,6 @@ func AddTeam(c *gin.Context) {
 }
 
 func GetTeams(c *gin.Context) {
-	// 用户校验
-	_, ok := c.Get("userID")
-	if !ok {
-		// 如果是游客
-		teams, err := service.GetTeams("", nil, false)
-		if err != nil {
-			utils.BuildErrorResponse(c, 500, "GetTeams get failed err is: "+err.Error())
-			return
-		}
-		utils.BuildSuccessResponse(c, teams)
-		return
-	}
-
-	// 如果是用户或管理员
 	// 获取查询参数（都是可选参数）
 	name := c.Query("name")
 	isExistStr := c.Query("isExist")
@@ -49,13 +35,24 @@ func GetTeams(c *gin.Context) {
 		isExistValue := isExistStr == "true"
 		isExist = &isExistValue
 	}
-	teams, err := service.GetTeams(name, isExist, true)
+
+	// 用户校验
+	var err error
+	var teams []model.TeamPO
+	_, ok := c.Get("userID")
+	if !ok {
+		// 如果是游客
+		teams, err = service.GetTeams(name, isExist, false)
+	} else {
+		// 如果是用户或管理员
+		teams, err = service.GetTeams(name, isExist, true)
+	}
 	if err != nil {
 		utils.BuildErrorResponse(c, 500, "GetTeams get failed err is: "+err.Error())
 		return
 	}
-
 	utils.BuildSuccessResponse(c, teams)
+	return
 }
 
 func UpdateTeam(c *gin.Context) {

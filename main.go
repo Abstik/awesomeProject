@@ -22,6 +22,8 @@ func main() {
 	}
 	// 初始化Gin
 	r := gin.Default()
+	// 配置静态资源访问，把 /img 映射到本地 ./img 目录
+	r.Static("/img", "./img")
 	// 设置日志中间件
 	r.Use(middleware.SetLoggerMiddleware())
 	// 设置路由

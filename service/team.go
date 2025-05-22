@@ -25,8 +25,10 @@ func GetTeams(name string, isExist *bool, isUser bool) ([]model.TeamPO, error) {
 
 	delay := 0
 	for i := range teamPOs {
-		teamPOs[i].Delay = delay
-		delay += 100
+		if *teamPOs[i].IsExist {
+			teamPOs[i].Delay = delay
+			delay += 100
+		}
 	}
 
 	return teamPOs, nil
