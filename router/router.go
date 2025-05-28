@@ -49,6 +49,8 @@ func SetupRegisterRouter(r *gin.Engine) {
 		apiGroup.POST("/members", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.Register)
 		// 查询毕业生的所有年份
 		apiGroup.GET("/years", handler.GetYears)
+		// 删除成员
+		apiGroup.DELETE("/members", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.DeleteMember)
 	}
 
 	{
@@ -58,6 +60,10 @@ func SetupRegisterRouter(r *gin.Engine) {
 		apiGroup.GET("/activity", handler.GetActivityById)
 		// 上传活动
 		apiGroup.POST("/activity", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.AddActivity)
+		// 修改活动
+		apiGroup.PUT("/activity", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.UpdateActivity)
+		// 删除活动
+		apiGroup.DELETE("/activity", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.DeleteActivity)
 	}
 
 	{
@@ -73,14 +79,18 @@ func SetupRegisterRouter(r *gin.Engine) {
 
 	{
 		// 上传捐款信息
-		apiGroup.POST("/donation", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.AddDonations)
+		apiGroup.POST("/donation/list", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.AddDonations)
 		// 查询捐款信息
 		apiGroup.GET("/donation/list", middleware.JWTAuthMiddleware(), handler.GetDonations)
+		// 删除捐款信息
+		apiGroup.DELETE("/donation", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.DeleteDonation)
 	}
 
 	{
 		// 上传图片附带水印
 		apiGroup.POST("/uploadImgWithWaterMark", middleware.JWTAuthMiddleware(), handler.UploadImgWithWaterMark)
+		// 删除图片
+		apiGroup.DELETE("/deleteImg", middleware.JWTAuthMiddleware(), handler.DeleteImg)
 	}
 
 	{
@@ -88,5 +98,12 @@ func SetupRegisterRouter(r *gin.Engine) {
 		apiGroup.POST("/contact", handler.UpdateContact)
 		// 获取联系方式
 		apiGroup.GET("/contact", handler.ContactWithUs)
+	}
+
+	{
+		// 上传培养计划
+		apiGroup.POST("/trainplan", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.UpdateTrainPlan)
+		// 获取培养计划
+		apiGroup.GET("/trainplan", handler.GetTrainPlan)
 	}
 }

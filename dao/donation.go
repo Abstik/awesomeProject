@@ -19,3 +19,7 @@ func GetDonations(year string) ([]model.DonationPO, error) {
 	}
 	return donations, nil
 }
+
+func DeleteDonation(id int) error {
+	return db.Delete(&model.DonationPO{}, id).Error
+}

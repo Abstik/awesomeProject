@@ -2,11 +2,13 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"awesomeProject/dao"
 	"awesomeProject/model"
 	"awesomeProject/service"
 	"awesomeProject/utils"
@@ -28,6 +30,7 @@ func Register(c *gin.Context) {
 
 	err = service.Register(memReq)
 	if err != nil {
+		fmt.Printf("handler.Register format error, error is %s", err.Error())
 		utils.BuildErrorResponse(c, 500, "Register Failed error is "+err.Error())
 		return
 	}
@@ -180,4 +183,20 @@ func GetYears(c *gin.Context) {
 	}
 	utils.BuildSuccessResponse(c, years)
 	return
+}
+
+func DeleteMember(c *gin.Context) {
+	uidStr := c.Query("uid")
+	if uidStr == "" {
+		utils.BuildErrorResponse(c, 400, "uidStr is not found")
+		return
+	}
+
+	uid, _ := strconv.ParseInt(uidStr, 10, 64)
+	err := dao.DeleteMember(uid)
+	if err != nil {
+		utils.BuildErrorResponse(c, 500, "DeleteMember failed err is: "+err.Error())
+		return
+	}
+	utils.BuildSuccessResponse(c, "删除成功")
 }

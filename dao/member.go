@@ -16,29 +16,35 @@ func InsertMember(mem *model.MemberPO) error {
 func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]model.MemberPO, int64, error) {
 	var members []model.MemberPO
 	var total int64
-	query := db.Model(&model.MemberPO{})
 
+	// 构造基础查询条件
+	baseQuery := db.Model(&model.MemberPO{})
 	if team != nil {
-		query = query.Where("team = ?", *team)
+		baseQuery = baseQuery.Where("team = ?", *team)
 	}
 	if isGraduate != nil {
-		query = query.Where("is_graduate = ?", *isGraduate)
+		baseQuery = baseQuery.Where("is_graduate = ?", *isGraduate)
 	}
+	if year != nil {
+		baseQuery = baseQuery.Where("year = ?", *year)
+	}
+
+	// 先 count 总数
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// 重新构造分页查询（从 baseQuery 克隆一份）
+	query := baseQuery
 	if pageSize != nil && pageNum != nil {
 		query = query.Limit(*pageSize).Offset((*pageNum - 1) * (*pageSize))
 	}
-	if year != nil {
-		query = query.Where("year = ?", *year)
-	}
 
-	err := query.Count(&total).Error
-	if err != nil {
-		return nil, 0, err
-	}
-
+	// 获取数据
 	if err := query.Find(&members).Error; err != nil {
 		return nil, 0, err
 	}
+
 	return members, total, nil
 }
 
@@ -91,4 +97,8 @@ func GetYears() ([]int, error) {
 	}
 
 	return years, nil
+}
+
+func DeleteMember(uid int64) error {
+	return db.Where("uid = ?", uid).Delete(&model.MemberPO{}).Error
 }

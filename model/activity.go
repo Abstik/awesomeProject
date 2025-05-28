@@ -22,7 +22,8 @@ type ActivityListReq struct {
 	PageNum  int64 `json:"pageNum,omitempty"`
 }
 
-type AddActivityReq struct {
+type ActivityReq struct {
+	AID     int64   `gorm:"primaryKey;column:aid" json:"aid"`
 	Title   *string `gorm:"column:" json:"title"`
 	Img     *string `gorm:"column:img" json:"img"`
 	Summary *string `gorm:"column:summary" json:"summary"`

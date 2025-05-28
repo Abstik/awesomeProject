@@ -12,11 +12,11 @@ type AddDonationReq struct {
 
 type AddDonationsReq struct {
 	Donations []struct {
-		Name   *string  `json:"name" binding:"required"`                              // 捐赠者姓名，必填
-		Team   *string  `json:"team" binding:"required"`                              // 团队名称，必填
-		Money  *float64 `json:"money" binding:"required"`                             // 捐款金额，必填
-		Time   *string  `json:"time" binding:"required,datetime=2006-01-02 15:04:05"` // 捐款时间，必填
-		Remark *string  `json:"remark" binding:"omitempty"`                           // 备注信息，可选
+		Name   *string  `json:"name" binding:"required"`               // 捐赠者姓名，必填
+		Team   *string  `json:"team" binding:"required"`               // 团队名称，必填
+		Money  *float64 `json:"money" binding:"required"`              // 捐款金额，必填
+		Time   *string  `json:"time" binding:"required,datetime=2006"` // 捐款时间，必填
+		Remark *string  `json:"remark" binding:"omitempty"`            // 备注信息，可选
 	} `json:"donations" binding:"required,dive"` // 必填，且校验数组中的每个对象
 }
 

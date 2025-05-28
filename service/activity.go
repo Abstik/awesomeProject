@@ -24,7 +24,7 @@ func GetActivityByAid(aid int64) (*model.ActivityPO, error) {
 	return res, nil
 }
 
-func AddActivity(req *model.AddActivityReq) error {
+func AddActivity(req *model.ActivityReq) error {
 	activity := &model.ActivityPO{
 		Title:   req.Title,
 		Summary: req.Summary,
@@ -38,4 +38,22 @@ func AddActivity(req *model.AddActivityReq) error {
 		return err
 	}
 	return nil
+}
+
+func UpdateActivity(req *model.ActivityReq) error {
+	activity := &model.ActivityPO{AID: req.AID}
+	if req.Img != nil {
+		activity.Img = req.Img
+	}
+	if req.Title != nil {
+		activity.Title = req.Title
+	}
+	if req.Summary != nil {
+		activity.Summary = req.Summary
+	}
+	if req.Content != nil {
+		activity.Content = req.Content
+	}
+	err := dao.UpdateActivity(activity)
+	return err
 }

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 
 	"awesomeProject/dao"
@@ -38,4 +40,24 @@ func GetDonations(c *gin.Context) {
 		return
 	}
 	utils.BuildSuccessResponse(c, donations)
+}
+
+func DeleteDonation(c *gin.Context) {
+	// 从查询参数中获取 id
+	idStr := c.Query("id")
+	if idStr == "" {
+		utils.BuildErrorResponse(c, 400, "DeleteDonation id is empty")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		utils.BuildErrorResponse(c, 400, "DeleteDonation id is not a number")
+		return
+	}
+	if err := dao.DeleteDonation(id); err != nil {
+		utils.BuildErrorResponse(c, 500, "DeleteDonation err is: "+err.Error())
+		return
+	}
+	utils.BuildSuccessResponse(c, "删除成功")
 }

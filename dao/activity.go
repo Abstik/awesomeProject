@@ -4,14 +4,14 @@ import "awesomeProject/model"
 
 func GetActivityListByPage(pageSize, pageNum int) ([]*model.ActivityPO, int64, error) {
 	var res []*model.ActivityPO
-	offset := (pageSize - 1) * pageNum
+	offset := (pageNum - 1) * pageSize
 	var total int64
 	result := db.Model(&model.ActivityPO{}).Count(&total)
 	if result.Error != nil {
 		return nil, 0, result.Error
 	}
 
-	dbRes := db.Model(&model.ActivityPO{}).Order("time DESC").Offset(offset).Limit(pageNum).Find(&res)
+	dbRes := db.Model(&model.ActivityPO{}).Order("time DESC").Offset(offset).Limit(pageSize).Find(&res)
 	if dbRes.Error != nil {
 		return nil, 0, dbRes.Error
 	}
@@ -39,5 +39,15 @@ func GetActivityByAid(aid int64) (*model.ActivityPO, error) {
 
 func InsertActivity(activity *model.ActivityPO) error {
 	result := db.Create(activity)
+	return result.Error
+}
+
+func UpdateActivity(activity *model.ActivityPO) error {
+	result := db.Model(&model.ActivityPO{}).Where("aid = ?", activity.AID).Updates(activity)
+	return result.Error
+}
+
+func DeleteActivity(aid int64) error {
+	result := db.Model(&model.ActivityPO{}).Where("aid = ?", aid).Delete(&model.ActivityPO{})
 	return result.Error
 }

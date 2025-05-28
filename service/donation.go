@@ -31,7 +31,7 @@ func AddDonations(req model.AddDonationsReq) error {
 	var donations []model.DonationPO
 
 	for _, d := range req.Donations {
-		donationTime, err := time.Parse("2006-01-02 15:04:05", *d.Time)
+		donationTime, err := time.Parse("2006", *d.Time)
 		if err != nil {
 			return err
 		}

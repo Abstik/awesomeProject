@@ -56,15 +56,15 @@ func UploadImgWithWaterMark(c *gin.Context) {
 		return
 	}
 
-	// 加载水印图片
+	/*// 加载水印图片
 	watermarkImg, err := loadWatermark()
 	if err != nil {
 		utils.BuildErrorResponse(c, 500, "Failed to load watermark image")
 		return
-	}
+	}*/
 
-	// 将水印叠加到图片
-	watermarkedImg := addWatermark(img, watermarkImg)
+	/*// 将水印叠加到图片
+	watermarkedImg := addWatermark(img, watermarkImg)*/
 
 	// 构造目标文件名（随机生成，确保唯一性）
 	filename := fmt.Sprintf("watermarked_%d.%s", time.Now().Unix(), format)
@@ -80,9 +80,9 @@ func UploadImgWithWaterMark(c *gin.Context) {
 
 	// 根据图片格式保存
 	if format == "jpeg" || format == "jpg" {
-		err = jpeg.Encode(outFile, watermarkedImg, &jpeg.Options{Quality: 90})
+		err = jpeg.Encode(outFile, img, &jpeg.Options{Quality: 90})
 	} else if format == "png" {
-		err = png.Encode(outFile, watermarkedImg)
+		err = png.Encode(outFile, img)
 	} else {
 		utils.BuildErrorResponse(c, 400, "Unsupported image format")
 		return
@@ -144,4 +144,21 @@ func addWatermark(baseImg image.Image, watermarkImg image.Image) image.Image {
 	)
 
 	return rgba
+}
+
+func DeleteImg(c *gin.Context) {
+	url := c.Query("url")
+	if url == "" {
+		utils.BuildErrorResponse(c, 400, "url 为必传参数 请传递url")
+		return
+	}
+
+	err := os.Remove(filepath.Join(".", url))
+	if err != nil {
+		utils.BuildErrorResponse(c, 500, "删除图片失败")
+		return
+	}
+	utils.BuildSuccessResponse(c, gin.H{
+		"success": true,
+	})
 }

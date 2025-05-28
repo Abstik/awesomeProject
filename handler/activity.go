@@ -5,13 +5,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"awesomeProject/dao"
 	"awesomeProject/model"
 	"awesomeProject/service"
 	"awesomeProject/utils"
 )
 
 func GetActivityById(c *gin.Context) {
-	aid := c.Query("id")
+	aid := c.Query("aid")
 	if aid == "" {
 		utils.BuildErrorResponse(c, 400, "aid 为必传参数 请传递aid")
 		return
@@ -32,7 +33,7 @@ func GetActivityById(c *gin.Context) {
 
 // 上传活动
 func AddActivity(c *gin.Context) {
-	var addActivityReq *model.AddActivityReq
+	var addActivityReq *model.ActivityReq
 	err := c.ShouldBindJSON(&addActivityReq)
 	if err != nil {
 		utils.BuildErrorResponse(c, 500, "AddActivity format error, error is "+err.Error())
@@ -79,4 +80,38 @@ func GetActivityList(c *gin.Context) {
 		utils.BuildErrorResponse(c, 400, "pageSize or pageNum is not valid")
 		return
 	}
+}
+
+func UpdateActivity(c *gin.Context) {
+	var activityReq *model.ActivityReq
+	err := c.ShouldBindJSON(&activityReq)
+	if err != nil {
+		utils.BuildErrorResponse(c, 500, "UpdateActivity format error, error is "+err.Error())
+		return
+	}
+	if activityReq.AID == 0 {
+		utils.BuildErrorResponse(c, 400, "aid is not valid")
+		return
+	}
+
+	err = service.UpdateActivity(activityReq)
+	if err != nil {
+		utils.BuildErrorResponse(c, 500, "UpdateActivity Failed error is "+err.Error())
+		return
+	}
+	utils.BuildSuccessResponse(c, "更新成功")
+}
+
+func DeleteActivity(c *gin.Context) {
+	aidStr := c.Query("aid")
+	if aidStr == "" {
+		utils.BuildErrorResponse(c, 400, "aid 为必传参数 请传递aid")
+		return
+	}
+	aid, _ := strconv.ParseInt(aidStr, 10, 64)
+	if err := dao.DeleteActivity(aid); err != nil {
+		utils.BuildErrorResponse(c, 500, "DeleteActivity Failed error is "+err.Error())
+		return
+	}
+	utils.BuildSuccessResponse(c, "删除成功")
 }
