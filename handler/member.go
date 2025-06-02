@@ -14,7 +14,7 @@ import (
 	"awesomeProject/utils"
 )
 
-// 用户注册
+// 添加成员
 func Register(c *gin.Context) {
 	var memReq *model.MemberRequest
 	err := c.ShouldBindJSON(&memReq)
@@ -154,14 +154,14 @@ func ChangeMemberInfo(c *gin.Context) {
 
 // 根据用户名获取用户信息
 func GetMemberByName(c *gin.Context) {
-	userName, ok := c.Get("username")
-	if !ok {
-		utils.BuildErrorResponse(c, 500, "username is not found")
+	userName := c.Query("username")
+	if userName == "" {
+		utils.BuildErrorResponse(c, 400, "username is not found")
 		return
 	}
 
 	// 调用 Service 层获取用户数据
-	member, err := service.GetMemberByUsername(userName.(string))
+	member, err := service.GetMemberByUsername(userName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.BuildErrorResponse(c, 404, "User not found")

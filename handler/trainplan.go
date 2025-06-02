@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"awesomeProject/dao"
 	"awesomeProject/model"
@@ -30,6 +33,10 @@ func UpdateTrainPlan(c *gin.Context) {
 func GetTrainPlan(c *gin.Context) {
 	trainPlan, err := dao.GetTrainPlan()
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.BuildSuccessResponse(c, model.TrainPlan{})
+			return
+		}
 		utils.BuildErrorResponse(c, 500, "GetTrainPlan failed err is: "+err.Error())
 		return
 	}

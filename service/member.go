@@ -28,11 +28,12 @@ func Register(mem *model.MemberRequest) error {
 	if time.Now().Month() > 6 && time.Now().Year()-*mem.Year >= 4 {
 		isGraduate = 1
 	} else {
-		isGraduate = 2
+		isGraduate = 0
 	}
 
 	password := utils.EncryptPassword(*mem.Username + "123")
 
+	status := 1
 	// 插入数据库
 	memPO := &model.MemberPO{
 		Username:   mem.Username,
@@ -41,6 +42,7 @@ func Register(mem *model.MemberRequest) error {
 		Team:       mem.Team,
 		Password:   &password,
 		IsGraduate: &isGraduate,
+		Status:     &status,
 	}
 	err := dao.InsertMember(memPO)
 	if err != nil {

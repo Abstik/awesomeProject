@@ -38,7 +38,7 @@ func SetupRegisterRouter(r *gin.Engine) {
 		apiGroup.POST("/login", handler.Login)
 		// 根据用户名修改个人信息
 		apiGroup.POST("/changeinfo", middleware.JWTAuthMiddleware(), handler.ChangeMemberInfo)
-		// 根据用户名查询个人信息（只能本人查询本人）
+		// 根据用户名查询个人信息
 		apiGroup.GET("/userinfo", middleware.JWTAuthMiddleware(), handler.GetMemberByName)
 	}
 

@@ -21,7 +21,7 @@ type MemberRequest struct {
 	IsGraduate  *int    `json:"isGraduate,omitempty"`  // 是否毕业
 	Signature   *string `json:"signature,omitempty"`   // 个性签名
 	Year        *int    `json:"year,omitempty"`        // 入学年份
-	Status      *int    `json:"status,omitempty"`      // 0管理员，1已毕业，2未毕业
+	Status      *int    `json:"status,omitempty"`      // 0为管理员，1为用户
 	CaptchaID   *string `json:"captchaID,omitempty"`   // 验证码ID，必填
 	CaptchaData *string `json:"captchaData,omitempty"` // 验证码数据，必填
 }
