@@ -58,6 +58,15 @@ func GetMemberByUsername(userName string) (*model.MemberPO, error) {
 	return &member, nil
 }
 
+func GetMemberByName(name string) (*model.MemberPO, error) {
+	var member model.MemberPO
+	result := db.Where("name = ?", name).First(&member)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &member, nil
+}
+
 // 根据 UID 查询用户
 func GetMemberByUID(uid int) (*model.MemberPO, error) {
 	var member model.MemberPO

@@ -38,8 +38,10 @@ func SetupRegisterRouter(r *gin.Engine) {
 		apiGroup.POST("/login", handler.Login)
 		// 根据用户名修改个人信息
 		apiGroup.POST("/changeinfo", middleware.JWTAuthMiddleware(), handler.ChangeMemberInfo)
-		// 根据用户名查询个人信息
-		apiGroup.GET("/userinfo", middleware.JWTAuthMiddleware(), handler.GetMemberByName)
+		// 根据用户名username查询个人信息
+		apiGroup.GET("/userinfo", middleware.JWTAuthMiddleware(), handler.GetMemberByUserName)
+		// 根据姓名name查询个人信息
+		apiGroup.GET("/member", middleware.JWTAuthMiddleware(), handler.GetMemberByName)
 	}
 
 	{
@@ -87,7 +89,7 @@ func SetupRegisterRouter(r *gin.Engine) {
 	}
 
 	{
-		// 上传图片附带水印
+		// 上传图片
 		apiGroup.POST("/uploadImgWithWaterMark", middleware.JWTAuthMiddleware(), handler.UploadImgWithWaterMark)
 		// 删除图片
 		apiGroup.DELETE("/deleteImg", middleware.JWTAuthMiddleware(), handler.DeleteImg)
@@ -101,8 +103,8 @@ func SetupRegisterRouter(r *gin.Engine) {
 	}
 
 	{
-		// 上传培养计划
-		apiGroup.POST("/trainplan", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.UpdateTrainPlan)
+		// 修改培养计划
+		apiGroup.PUT("/trainplan", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.UpdateTrainPlan)
 		// 获取培养计划
 		apiGroup.GET("/trainplan", handler.GetTrainPlan)
 	}

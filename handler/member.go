@@ -153,7 +153,7 @@ func ChangeMemberInfo(c *gin.Context) {
 }
 
 // 根据用户名获取用户信息
-func GetMemberByName(c *gin.Context) {
+func GetMemberByUserName(c *gin.Context) {
 	userName := c.Query("username")
 	if userName == "" {
 		utils.BuildErrorResponse(c, 400, "username is not found")
@@ -172,6 +172,28 @@ func GetMemberByName(c *gin.Context) {
 	}
 
 	// 返回成功响应
+	utils.BuildSuccessResponse(c, member)
+}
+
+func GetMemberByName(c *gin.Context) {
+	name := c.Query("name")
+	if name == "" {
+		utils.BuildErrorResponse(c, 400, "name is not found")
+		return
+	}
+
+	// 调用 Service 层获取用户数据
+	member, err := service.GetMemberByName(name)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.BuildErrorResponse(c, 404, "User not found")
+		} else {
+			utils.BuildErrorResponse(c, 500, "Failed to query user")
+		}
+		return
+	}
+
+	// 成功响应
 	utils.BuildSuccessResponse(c, member)
 }
 

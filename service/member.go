@@ -88,8 +88,15 @@ func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]mo
 
 // 根据用户名获取用户信息
 func GetMemberByUsername(userName string) (*model.MemberPO, error) {
-	// 调用 DAO 层获取用户数据
 	member, err := dao.GetMemberByUsername(userName)
+	if err != nil {
+		return nil, err
+	}
+	return member, nil
+}
+
+func GetMemberByName(name string) (*model.MemberPO, error) {
+	member, err := dao.GetMemberByName(name)
 	if err != nil {
 		return nil, err
 	}

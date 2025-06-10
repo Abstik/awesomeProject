@@ -1,6 +1,7 @@
 package service
 
 import (
+	"regexp"
 	"time"
 
 	"awesomeProject/dao"
@@ -21,7 +22,32 @@ func GetActivityByAid(aid int64) (*model.ActivityPO, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	content := sanitizeHTML(*res.Content)
+	res.Content = &content
 	return res, nil
+}
+
+func sanitizeHTML(input string) string {
+	/*// 匹配 <img ... src="..." ...> 标签
+	imgTagRegex := regexp.MustCompile(`<img[^>]*src=["']([^"']+)["'][^>]*>`)
+
+	// 替换为 <p style="text-align:center;"><img src="..." /></p>
+	safeHTML := imgTagRegex.ReplaceAllStringFunc(input, func(imgTag string) string {
+		matches := imgTagRegex.FindStringSubmatch(imgTag)
+		if len(matches) < 2 {
+			return "" // 找不到 src 就不保留了
+		}
+		src := matches[1]
+		return fmt.Sprintf(`<p style="text-align:center;"><img src="%s" /></p>`, src)
+	})*/
+
+	// 正则表达式：匹配被任意标签包裹的 <img> 标签
+	re := regexp.MustCompile(`(?i)<[^>]+>\s*(<img[^>]*>)\s*</[^>]+>`)
+	// 替换为 <p><img ... /></p>
+	result := re.ReplaceAllString(input, "<p>$1</p>")
+
+	return result
 }
 
 func AddActivity(req *model.ActivityReq) error {
