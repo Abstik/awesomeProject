@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"awesomeProject/model"
 	"awesomeProject/service"
@@ -47,8 +50,8 @@ func GetTeams(c *gin.Context) {
 		// 如果是用户或管理员
 		teams, err = service.GetTeams(name, isExist, true)
 	}
-	if err != nil {
-		utils.BuildErrorResponse(c, 500, "GetTeams get failed err is: "+err.Error())
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildErrorResponse(c, 500, "查询失败")
 		return
 	}
 	utils.BuildSuccessResponse(c, teams)

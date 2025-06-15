@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"awesomeProject/dao"
 	"awesomeProject/model"
@@ -10,8 +13,9 @@ import (
 
 func ContactWithUs(c *gin.Context) {
 	contact, err := dao.GetContact()
-	if err != nil {
-		utils.BuildErrorResponse(c, 500, "GetContact failed err is: "+err.Error())
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildErrorResponse(c, 500, "查询失败")
+		return
 	}
 	utils.BuildSuccessResponse(c, contact)
 }
@@ -22,6 +26,7 @@ func UpdateContact(c *gin.Context) {
 	if err != nil {
 		utils.BuildErrorResponse(c, 400, "AddContact format error, error is "+err.Error())
 	}
+
 	if err := dao.UpdateContact(contact); err != nil {
 		utils.BuildErrorResponse(c, 500, "AddContact failed err is: "+err.Error())
 	}

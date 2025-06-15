@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -19,19 +18,18 @@ func Register(c *gin.Context) {
 	var memReq *model.MemberRequest
 	err := c.ShouldBindJSON(&memReq)
 	if err != nil {
-		utils.BuildErrorResponse(c, 400, "Register format error, error is "+err.Error())
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
 	// 参数校验
 	if memReq.Username == nil || memReq.Name == nil || memReq.Year == nil || memReq.Team == nil {
-		utils.BuildErrorResponse(c, 400, "Register format error")
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
 
 	err = service.Register(memReq)
 	if err != nil {
-		fmt.Printf("handler.Register format error, error is %s", err.Error())
-		utils.BuildErrorResponse(c, 500, "Register Failed error is "+err.Error())
+		utils.BuildErrorResponse(c, 500, "服务器繁忙")
 		return
 	}
 	utils.BuildSuccessResponse(c, "注册成功")
@@ -42,23 +40,23 @@ func Login(c *gin.Context) {
 	var memReq *model.MemberRequest
 	err := c.ShouldBindJSON(&memReq)
 	if err != nil {
-		utils.BuildErrorResponse(c, 400, "Register format error, error is "+err.Error())
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
 	// 参数校验
 	if memReq.Username == nil || memReq.Password == nil || memReq.CaptchaID == nil || memReq.CaptchaData == nil {
-		utils.BuildErrorResponse(c, 400, "Register format error")
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
 	}
 
 	// 校验验证码
 	if ok := VerifyCaptcha(*memReq.CaptchaID, *memReq.CaptchaData); !ok {
-		utils.BuildErrorResponse(c, 400, "Captcha verification failed or expired")
+		utils.BuildErrorResponse(c, 400, "验证码有误")
 		return
 	}
 
 	data, err := service.Login(memReq)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "Register Failed error is "+err.Error())
+		utils.BuildErrorResponse(c, 500, "服务器繁忙")
 		return
 	}
 	utils.BuildSuccessResponse(c, data)
@@ -83,7 +81,7 @@ func GetMemberList(c *gin.Context) {
 			tmp = 0
 			isGraduate = &tmp
 		} else {
-			utils.BuildErrorResponse(c, 400, "isGraduate format error")
+			utils.BuildErrorResponse(c, 400, "参数格式有误")
 			return
 		}
 	}
@@ -105,7 +103,7 @@ func GetMemberList(c *gin.Context) {
 
 	res, total, err := service.GetMemberList(team, isGraduate, pageSize, pageNum, year)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "GetMemberList failed err is: "+err.Error())
+		utils.BuildErrorResponse(c, 500, "服务器繁忙")
 		return
 	}
 
@@ -113,10 +111,6 @@ func GetMemberList(c *gin.Context) {
 		"data":  res,
 		"total": total,
 	})
-}
-
-func AddMember(c *gin.Context) {
-	// 这功能暂时不做 不知道和注册的区别在哪儿
 }
 
 // 修改用户信息
@@ -162,12 +156,8 @@ func GetMemberByUserName(c *gin.Context) {
 
 	// 调用 Service 层获取用户数据
 	member, err := service.GetMemberByUsername(userName)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.BuildErrorResponse(c, 404, "User not found")
-		} else {
-			utils.BuildErrorResponse(c, 500, "Failed to query user")
-		}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildErrorResponse(c, 500, "查询失败")
 		return
 	}
 
@@ -184,12 +174,8 @@ func GetMemberByName(c *gin.Context) {
 
 	// 调用 Service 层获取用户数据
 	member, err := service.GetMemberByName(name)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.BuildErrorResponse(c, 404, "User not found")
-		} else {
-			utils.BuildErrorResponse(c, 500, "Failed to query user")
-		}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildErrorResponse(c, 500, "查询失败")
 		return
 	}
 
@@ -199,8 +185,8 @@ func GetMemberByName(c *gin.Context) {
 
 func GetYears(c *gin.Context) {
 	years, err := service.GetYears()
-	if err != nil {
-		utils.BuildErrorResponse(c, 500, "GetYears failed err is: "+err.Error())
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildErrorResponse(c, 500, "查询失败")
 		return
 	}
 	utils.BuildSuccessResponse(c, years)

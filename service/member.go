@@ -31,6 +31,7 @@ func Register(mem *model.MemberRequest) error {
 		isGraduate = 0
 	}
 
+	// todo 密码是在账号后拼接5位随机数
 	password := utils.EncryptPassword(*mem.Username + "123")
 
 	status := 1

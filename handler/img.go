@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"image"
-	"image/draw"
 	"image/jpeg"
 	"image/png"
 	"log"
@@ -11,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/disintegration/imaging" // 用于简化图像操作
 	"github.com/gin-gonic/gin"
 
 	"awesomeProject/utils"
@@ -56,16 +54,6 @@ func UploadImgWithWaterMark(c *gin.Context) {
 		return
 	}
 
-	/*// 加载水印图片
-	watermarkImg, err := loadWatermark()
-	if err != nil {
-		utils.BuildErrorResponse(c, 500, "Failed to load watermark image")
-		return
-	}*/
-
-	/*// 将水印叠加到图片
-	watermarkedImg := addWatermark(img, watermarkImg)*/
-
 	// 构造目标文件名（随机生成，确保唯一性）
 	filename := fmt.Sprintf("watermarked_%d.%s", time.Now().Unix(), format)
 	outputPath := filepath.Join(uploadDir, filename)
@@ -97,53 +85,6 @@ func UploadImgWithWaterMark(c *gin.Context) {
 		"success": true,
 		"url":     "/img/" + filename,
 	})
-}
-
-// 加载水印图片
-func loadWatermark() (image.Image, error) {
-	// 打开水印图片文件
-	file, err := os.Open(watermarkPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open watermark file: %v", err)
-	}
-	defer file.Close()
-
-	// 解码水印图片
-	watermarkImg, _, err := image.Decode(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode watermark image: %v", err)
-	}
-
-	return watermarkImg, nil
-}
-
-// 添加水印到图片右下角
-func addWatermark(baseImg image.Image, watermarkImg image.Image) image.Image {
-	// 获取图片的宽高
-	baseBounds := baseImg.Bounds()
-	baseWidth, baseHeight := baseBounds.Dx(), baseBounds.Dy()
-
-	// 克隆原始图片为 RGBA 格式
-	rgba := imaging.Clone(baseImg)
-
-	// 获取水印宽高
-	watermarkBounds := watermarkImg.Bounds()
-	watermarkWidth, watermarkHeight := watermarkBounds.Dx(), watermarkBounds.Dy()
-
-	// 计算水印放置的位置（右下角）
-	offsetX := baseWidth - watermarkWidth - 10   // 距离右边缘 10 像素
-	offsetY := baseHeight - watermarkHeight - 10 // 距离下边缘 10 像素
-
-	// 在原图上叠加水印
-	draw.Draw(
-		rgba, // 目标图像
-		image.Rect(offsetX, offsetY, offsetX+watermarkWidth, offsetY+watermarkHeight), // 水印区域
-		watermarkImg,      // 水印图像
-		image.Point{0, 0}, // 水印图像的起始点
-		draw.Over,         // 绘制模式（叠加）
-	)
-
-	return rgba
 }
 
 func DeleteImg(c *gin.Context) {

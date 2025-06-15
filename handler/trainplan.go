@@ -32,12 +32,8 @@ func UpdateTrainPlan(c *gin.Context) {
 
 func GetTrainPlan(c *gin.Context) {
 	trainPlan, err := dao.GetTrainPlan()
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.BuildSuccessResponse(c, model.TrainPlan{})
-			return
-		}
-		utils.BuildErrorResponse(c, 500, "GetTrainPlan failed err is: "+err.Error())
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildErrorResponse(c, 500, "查询失败")
 		return
 	}
 	utils.BuildSuccessResponse(c, trainPlan)
