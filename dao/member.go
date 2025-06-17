@@ -60,7 +60,7 @@ func GetMemberByUsername(userName string) (*model.MemberPO, error) {
 
 func GetMemberByName(name string) (*model.MemberPO, error) {
 	var member model.MemberPO
-	result := db.Where("name = ?", name).First(&member)
+	result := db.Where("name LIKE ?", "%"+name+"%").First(&member)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -79,7 +79,6 @@ func GetMemberByUID(uid int) (*model.MemberPO, error) {
 
 // 更新用户信息
 func UpdateMember(member *model.MemberPO) error {
-	// todo 为什么userName和uid是联合索引呢 我真是想不透彻啊 id自己不行么 这里如果直接save还会因为联合索引不完全一致而建立新的数据 我的老天鹅啊
 	result := db.Model(&model.MemberPO{}).Where("username = ?", member.Username).Updates(member)
 	if result.Error != nil {
 		return result.Error
