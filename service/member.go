@@ -95,12 +95,9 @@ func GetMemberByUsername(userName string) (*model.MemberPO, error) {
 	return member, nil
 }
 
-func GetMemberByName(name string) (*model.MemberPO, error) {
-	member, err := dao.GetMemberByName(name)
-	if err != nil {
-		return nil, err
-	}
-	return member, nil
+func GetMemberByName(name string) ([]model.MemberPO, error) {
+	members, err := dao.GetMemberByName(name)
+	return members, err
 }
 
 func UpdateMember(req model.UpdateMemberRequest, statusInt int) error {
