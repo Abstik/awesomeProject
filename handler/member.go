@@ -56,6 +56,11 @@ func Login(c *gin.Context) {
 
 	data, err := service.Login(memReq)
 	if err != nil {
+		// 如果是用户名不存在
+		if err.Error() == "用户名不存在" || err.Error() == "密码错误" {
+			utils.BuildErrorResponse(c, 400, "用户名或密码错误")
+			return
+		}
 		utils.BuildErrorResponse(c, 500, "服务器繁忙")
 		return
 	}
@@ -173,14 +178,14 @@ func GetMemberByName(c *gin.Context) {
 	}
 
 	// 调用 Service 层获取用户数据
-	member, err := service.GetMemberByName(name)
+	members, err := service.GetMemberByName(name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.BuildErrorResponse(c, 500, "查询失败")
 		return
 	}
 
 	// 成功响应
-	utils.BuildSuccessResponse(c, member)
+	utils.BuildSuccessResponse(c, members)
 }
 
 func GetYears(c *gin.Context) {

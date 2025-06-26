@@ -16,8 +16,7 @@ import (
 )
 
 // 定义图片存储目录
-const uploadDir = "./img/"
-const watermarkPath = "./watermark.png" // 固定水印图片路径
+const uploadDir = "./res/"
 
 // 初始化
 func init() {
