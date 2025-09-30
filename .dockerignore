@@ -1,0 +1,13 @@
+# 忽略 Git 和编辑器配置
+.git
+*.log
+.vscode
+.idea
+.gitignore
+*.tar
+res
+# 忽略开发 Dockerfile
+Dockerfile.dev
+
+# 忽略构建产物
+/app/main

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"os"
 	"strconv"
 	"time"
 
@@ -33,16 +34,23 @@ func Register(mem *model.MemberRequest) error {
 
 	password := utils.EncryptPassword(*mem.Username + "123")
 
+	defaultPortrait := os.Getenv("DEFAULT_PORTRAIT")
+	defaultMienImg := os.Getenv("DEFAULT_MIEN_IMG")
+	defaultGraduateImg := os.Getenv("DEFAULT_GRADUATE_IMG")
+
 	status := 1
 	// 插入数据库
 	memPO := &model.MemberPO{
-		Username:   mem.Username,
-		Name:       mem.Name,
-		Year:       mem.Year,
-		Team:       mem.Team,
-		Password:   &password,
-		IsGraduate: &isGraduate,
-		Status:     &status,
+		Username:    mem.Username,
+		Name:        mem.Name,
+		Year:        mem.Year,
+		Team:        mem.Team,
+		Password:    &password,
+		IsGraduate:  &isGraduate,
+		Status:      &status,
+		Portrait:    &defaultPortrait,
+		MienImg:     &defaultMienImg,
+		GraduateImg: &defaultGraduateImg,
 	}
 	err := dao.InsertMember(memPO)
 	if err != nil {
@@ -83,6 +91,12 @@ func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]mo
 	if err != nil {
 		return nil, 0, err
 	}
+
+	for i := range res {
+		res[i].Portrait = utils.FullURL(res[i].Portrait)
+		res[i].MienImg = utils.FullURL(res[i].MienImg)
+		res[i].GraduateImg = utils.FullURL(res[i].GraduateImg)
+	}
 	return res, total, nil
 }
 
@@ -92,12 +106,20 @@ func GetMemberByUsername(userName string) (*model.MemberPO, error) {
 	if err != nil {
 		return nil, err
 	}
+	member.Portrait = utils.FullURL(member.Portrait)
+	member.MienImg = utils.FullURL(member.MienImg)
+	member.GraduateImg = utils.FullURL(member.GraduateImg)
 	return member, nil
 }
 
 func GetMemberByName(name string) ([]model.MemberPO, error) {
-	members, err := dao.GetMemberByName(name)
-	return members, err
+	res, err := dao.GetMemberByName(name)
+	for i := range res {
+		res[i].Portrait = utils.FullURL(res[i].Portrait)
+		res[i].MienImg = utils.FullURL(res[i].MienImg)
+		res[i].GraduateImg = utils.FullURL(res[i].GraduateImg)
+	}
+	return res, err
 }
 
 func UpdateMember(req model.UpdateMemberRequest, statusInt int) error {
@@ -131,16 +153,16 @@ func UpdateMember(req model.UpdateMemberRequest, statusInt int) error {
 		member.Team = req.Team
 	}
 	if req.Portrait != nil {
-		member.Portrait = req.Portrait
+		member.Portrait = utils.ParseURL(req.Portrait)
 	}
 	if req.MienImg != nil {
-		member.MienImg = req.MienImg
+		member.MienImg = utils.ParseURL(req.MienImg)
 	}
 	if req.Company != nil {
 		member.Company = req.Company
 	}
 	if req.GraduateImg != nil {
-		member.GraduateImg = req.GraduateImg
+		member.GraduateImg = utils.ParseURL(req.GraduateImg)
 	}
 	if req.IsGraduate != nil {
 		member.IsGraduate = req.IsGraduate

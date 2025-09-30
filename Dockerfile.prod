@@ -1,0 +1,14 @@
+# 使用多阶段构建 + 静态编译
+FROM golang:1.23 AS builder 
+WORKDIR /app
+COPY go.mod go.sum ./
+ENV GOPROXY=https://goproxy.cn,direct
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/main .
+
+# 使用 distroless 镜像（比 alpine 更安全）
+FROM gcr.io/distroless/static-debian12
+WORKDIR /app
+COPY --from=builder /app/main .
+CMD ["/app/main"]

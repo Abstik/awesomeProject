@@ -6,6 +6,7 @@ import (
 
 	"awesomeProject/dao"
 	"awesomeProject/model"
+	"awesomeProject/utils"
 )
 
 func GetActivityList(pageSize *int, pageNum *int) ([]*model.ActivityPO, int64, error) {
@@ -13,6 +14,9 @@ func GetActivityList(pageSize *int, pageNum *int) ([]*model.ActivityPO, int64, e
 	res, total, err := dao.GetActivityListByPage(*pageSize, *pageNum)
 	if err != nil {
 		return nil, 0, err
+	}
+	for _, v := range res {
+		v.Img = utils.FullURL(v.Img)
 	}
 	return res, total, nil
 }
@@ -23,53 +27,66 @@ func GetActivityByAid(aid int64) (*model.ActivityPO, error) {
 		return nil, err
 	}
 
-	content := sanitizeHTML(*res.Content)
+	content := FullImageURLs(*res.Content)
 	res.Content = &content
+
+	res.Img = utils.FullURL(res.Img)
 	return res, nil
 }
 
-func sanitizeHTML(input string) string {
-	/*// 匹配 <img ... src="..." ...> 标签
-	imgTagRegex := regexp.MustCompile(`<img[^>]*src=["']([^"']+)["'][^>]*>`)
+// 替换html中图片的相对路径为绝对路径
+func FullImageURLs(input string) string {
+	re := regexp.MustCompile(`(?i)(<img[^>]+src=["'])(/res/[^"']+)(["'])`)
 
-	// 替换为 <p style="text-align:center;"><img src="..." /></p>
-	safeHTML := imgTagRegex.ReplaceAllStringFunc(input, func(imgTag string) string {
-		matches := imgTagRegex.FindStringSubmatch(imgTag)
-		if len(matches) < 2 {
-			return "" // 找不到 src 就不保留了
+	return re.ReplaceAllStringFunc(input, func(match string) string {
+		subMatches := re.FindStringSubmatch(match)
+		if len(subMatches) != 4 {
+			return match
 		}
-		src := matches[1]
-		return fmt.Sprintf(`<p style="text-align:center;"><img src="%s" /></p>`, src)
-	})*/
 
-	// 正则表达式：匹配被任意标签包裹的 <img> 标签
-	re := regexp.MustCompile(`(?i)<[^>]+>\s*(<img[^>]*>)\s*</[^>]+>`)
-	// 替换为 <p><img ... /></p>
-	result := re.ReplaceAllString(input, "<p>$1</p>")
+		fullURL := utils.FullURL(&subMatches[2])
+		url := subMatches[1] + *fullURL + subMatches[3]
+		return url
+	})
+}
 
-	return result
+// 替换html中图片绝对路径为相对路径
+func ParseImageURLS(html string) string {
+	// 匹配 src="http://域名/res/xxx" 或 poster="http://域名/res/xxx"
+	re := regexp.MustCompile(`(?i)(src|poster)=["']https?://[^/]+(/res/[^"']+)["']`)
+
+	return re.ReplaceAllStringFunc(html, func(match string) string {
+		subMatches := re.FindStringSubmatch(match)
+		if len(subMatches) != 3 {
+			return match
+		}
+		attr := subMatches[1]    // src 或 poster
+		relPath := subMatches[2] // /res/xxx
+
+		// 返回： src="/res/xxx" 或 poster="/res/xxx"
+		return attr + `="` + relPath + `"`
+	})
 }
 
 func AddActivity(req *model.ActivityReq) error {
+	content := ParseImageURLS(*req.Content)
+
 	activity := &model.ActivityPO{
 		Title:   req.Title,
 		Summary: req.Summary,
-		Content: req.Content,
-		Img:     req.Img,
+		Content: &content,
+		Img:     utils.ParseURL(req.Img),
 	}
 	now := time.Now()
 	activity.Time = &now
 	err := dao.InsertActivity(activity)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func UpdateActivity(req *model.ActivityReq) error {
 	activity := &model.ActivityPO{AID: req.AID}
 	if req.Img != nil {
-		activity.Img = req.Img
+		activity.Img = utils.ParseURL(req.Img)
 	}
 	if req.Title != nil {
 		activity.Title = req.Title
@@ -78,7 +95,8 @@ func UpdateActivity(req *model.ActivityReq) error {
 		activity.Summary = req.Summary
 	}
 	if req.Content != nil {
-		activity.Content = req.Content
+		content := ParseImageURLS(*req.Content)
+		activity.Content = &content
 	}
 	err := dao.UpdateActivity(activity)
 	return err

@@ -6,8 +6,10 @@ import (
 	"image/jpeg"
 	"image/png"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -54,7 +56,7 @@ func UploadImgWithWaterMark(c *gin.Context) {
 	}
 
 	// 构造目标文件名（随机生成，确保唯一性）
-	filename := fmt.Sprintf("watermarked_%d.%s", time.Now().Unix(), format)
+	filename := fmt.Sprintf("%d.%s", time.Now().Unix(), format)
 	outputPath := filepath.Join(uploadDir, filename)
 
 	// 保存图片
@@ -79,25 +81,45 @@ func UploadImgWithWaterMark(c *gin.Context) {
 		return
 	}
 
+	filePath := uploadDir[1:] + filename
+
 	// 返回图片的 URL
 	utils.BuildSuccessResponse(c, gin.H{
 		"success": true,
-		"url":     "/img/" + filename,
+		"url":     utils.FullURL(&filePath),
 	})
 }
 
 func DeleteImg(c *gin.Context) {
-	url := c.Query("url")
-	if url == "" {
+	imgUrl := c.Query("url")
+	if imgUrl == "" {
 		utils.BuildErrorResponse(c, 400, "url 为必传参数 请传递url")
 		return
 	}
 
-	err := os.Remove(filepath.Join(".", url))
-	if err != nil {
-		utils.BuildErrorResponse(c, 500, "删除图片失败")
+	// 解析 URL
+	parsedURL, err := url.Parse(imgUrl)
+	if err != nil || parsedURL.Path == "" {
+		utils.BuildErrorResponse(c, 400, "非法的 URL")
 		return
 	}
+
+	// 仅允许 /res/ 开头的路径
+	if !strings.HasPrefix(parsedURL.Path, "/res/") {
+		utils.BuildErrorResponse(c, 400, "非法的资源路径")
+		return
+	}
+
+	// 拼接本地文件路径
+	localPath := filepath.Join(".", parsedURL.Path) // 即 ./res/xxx.jpg
+
+	// 删除文件
+	err = os.Remove(localPath)
+	if err != nil {
+		utils.BuildErrorResponse(c, 500, "删除失败文件："+err.Error())
+		return
+	}
+
 	utils.BuildSuccessResponse(c, gin.H{
 		"success": true,
 	})

@@ -1,7 +1,6 @@
 package router
 
 import (
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	"awesomeProject/handler"
@@ -14,17 +13,6 @@ func SetupRouter(router *gin.Engine) *gin.Engine {
 }
 
 func SetupRegisterRouter(r *gin.Engine) {
-	r.Use(cors.New(cors.Config{
-		// 允许的域名（前端地址）
-		AllowOrigins: []string{"*"}, // 允许所有源
-		// 允许的请求方法
-		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		// 允许的请求头
-		AllowHeaders: []string{"Content-Type", "Authorization"},
-		// 允许携带认证信息
-		AllowCredentials: true,
-	}))
-
 	apiGroup := r.Group("/api")
 	{
 		// 生成验证码
@@ -107,5 +95,14 @@ func SetupRegisterRouter(r *gin.Engine) {
 		apiGroup.PUT("/trainplan", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.UpdateTrainPlan)
 		// 获取培养计划
 		apiGroup.GET("/trainplan", handler.GetTrainPlan)
+	}
+
+	{
+		// 上传视频
+		apiGroup.POST("/videos", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.UploadOrUpdateVideo)
+		// 删除视频
+		apiGroup.DELETE("/videos", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.DeleteVideoByURL)
+		// 查询视频
+		apiGroup.GET("/videos", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.GetAllVideos)
 	}
 }
