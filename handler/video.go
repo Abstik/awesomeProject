@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -57,12 +58,11 @@ func UploadOrUpdateVideo(c *gin.Context) {
 		return
 	}
 	// 去除文件路径的.前缀
-	fileUrl := strings.TrimPrefix(outputPath, ".")
-
+	urlPath := path.Join("/videos", category, filename) // 注意使用 path.Join（URL 路径，使用 '/'）
 	utils.BuildSuccessResponse(c, gin.H{
 		"category": category,
 		"name":     strings.TrimSuffix(filename, filepath.Ext(filename)),
-		"url":      utils.FullURL(&fileUrl),
+		"url":      utils.FullURL(&urlPath),
 	})
 }
 

@@ -13,7 +13,7 @@ func SetupRouter(router *gin.Engine) *gin.Engine {
 }
 
 func SetupRegisterRouter(r *gin.Engine) {
-	apiGroup := r.Group("/api")
+	apiGroup := r.Group("/xupt-web/api")
 	{
 		// 生成验证码
 		apiGroup.GET("/captcha", handler.GetCaptcha)
@@ -85,7 +85,7 @@ func SetupRegisterRouter(r *gin.Engine) {
 
 	{
 		// 上传qq纳新群
-		apiGroup.POST("/contact", handler.UpdateContact)
+		apiGroup.POST("/contact", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.UpdateContact)
 		// 获取联系方式
 		apiGroup.GET("/contact", handler.ContactWithUs)
 	}
@@ -103,6 +103,6 @@ func SetupRegisterRouter(r *gin.Engine) {
 		// 删除视频
 		apiGroup.DELETE("/videos", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.DeleteVideoByURL)
 		// 查询视频
-		apiGroup.GET("/videos", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.GetAllVideos)
+		apiGroup.GET("/videos", handler.GetAllVideos)
 	}
 }

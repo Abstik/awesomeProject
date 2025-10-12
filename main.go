@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -73,8 +78,30 @@ func main() {
 	// 设置路由
 	r = router.SetupRouter(r)
 
-	// 启动服务
-	if err := r.Run(":8080"); err != nil {
-		panic("gin run err, error is " + err.Error())
+	// 自定义 http.Server（允许上传长时间连接）
+	srv := &http.Server{
+		Addr:           ":8080",
+		Handler:        r,
+		ReadTimeout:    0,       // 不限制读取时间
+		WriteTimeout:   0,       // 不限制写入时间
+		MaxHeaderBytes: 1 << 20, // 防止 header 攻击
+	}
+
+	// 异步启动
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			zap.L().Fatal("server run failed", zap.Error(err))
+		}
+	}()
+
+	// 优雅关闭（Ctrl+C 或系统信号）
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		zap.L().Fatal("Server forced to shutdown:", zap.Error(err))
 	}
 }

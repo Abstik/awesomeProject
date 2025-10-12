@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -12,24 +13,38 @@ import (
 */
 
 // 给图片的相对路径加上前缀，构成完整的图片URL
-func FullURL(path *string) *string {
-	if path == nil {
+func FullURL(p *string) *string {
+	if p == nil || *p == "" {
 		return nil
 	}
 
-	if strings.HasPrefix(*path, "http") {
-		return path // 已是完整路径
+	s := *p
+
+	// 如果已经完整 URL，直接返回
+	if strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://") {
+		return &s
+	}
+
+	//换反斜杠为正斜杠（Windows兼容）
+	s = strings.ReplaceAll(s, "\\", "/")
+
+	// 去除重复的斜杠
+	s = path.Clean(s)
+
+	// 确保前面有 "/"
+	if !strings.HasPrefix(s, "/") {
+		s = "/" + s
 	}
 
 	// path是 /res/文件名，domain是域名
 	domain := os.Getenv("DOMAIN_NAME")
 	if domain == "" {
-		domain = "127.0.0.1:8080"
-		//domain = "mobile.xupt.edu.cn"
+		domain = "mobile.xupt.edu.cn"
 	}
 
 	// todo 改为https
-	fullURL := fmt.Sprintf("http://%s%s", domain, *path)
+	//fullURL := fmt.Sprintf("https://%s%s", domain, s)
+	fullURL := fmt.Sprintf("http://127.0.0.1:8080%s", s)
 	return &fullURL
 }
 
