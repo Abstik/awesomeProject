@@ -14,9 +14,8 @@ var db *gorm.DB
 
 // 开启数据库连接
 func InitDatabaseConnector() error {
-	// todo
 	dsn := "root:325523@tcp(127.0.0.1:3306)/xiyoumobile_data?charset=utf8mb4&parseTime=True&loc=Local"
-	// 部署到服务器后，使用以下配置
+	// todo 部署到服务器后，使用以下配置
 	//dsn := fmt.Sprintf("root:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True",
 	//	os.Getenv("DB_PASSWORD"), // 密码
 	//	os.Getenv("DB_HOST"),     // 主机（必须改为 "mysql"）

@@ -141,7 +141,12 @@ func ChangeMemberInfo(c *gin.Context) {
 	statusInt := status.(int)
 
 	// 调用 Service 层更新用户信息
-	err := service.UpdateMember(req, statusInt)
+	var err error
+	if statusInt == 0 {
+		err = service.AdminUpdateMember(req)
+	} else {
+		err = service.UserUpdateMember(req)
+	}
 	if err != nil {
 		utils.BuildErrorResponse(c, 500, err.Error())
 		return
@@ -212,4 +217,26 @@ func DeleteMember(c *gin.Context) {
 		return
 	}
 	utils.BuildSuccessResponse(c, "删除成功")
+}
+
+func ResetPassword(c *gin.Context) {
+	username := c.PostForm("username")
+	user, err := dao.GetMemberByUsername(username)
+	if err != nil {
+		utils.BuildErrorResponse(c, 400, err.Error())
+	}
+	if user.Status == nil || user.Username == nil {
+		utils.BuildErrorResponse(c, 500, "此用户状态不合法")
+	}
+	if *user.Status == 0 {
+		utils.BuildErrorResponse(c, 400, "无法修改管理员账号")
+	}
+
+	password := utils.EncryptPassword(*user.Username + "123")
+
+	err = dao.ResetPassword(username, password)
+	if err != nil {
+		utils.BuildErrorResponse(c, 500, err.Error())
+	}
+	utils.BuildSuccessResponse(c, "重置成功")
 }

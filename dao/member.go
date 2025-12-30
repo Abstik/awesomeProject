@@ -110,3 +110,17 @@ func GetYears() ([]int, error) {
 func DeleteMember(uid int64) error {
 	return db.Where("uid = ?", uid).Delete(&model.MemberPO{}).Error
 }
+
+func ResetPassword(username, password string) error {
+	result := db.Model(&model.MemberPO{}).Where("username = ?", username).Update("password", password)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// 如果未更新任何记录，返回错误
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("no record found to update")
+	}
+
+	return nil
+}

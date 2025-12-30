@@ -39,7 +39,15 @@ func GetDonations(c *gin.Context) {
 		utils.BuildErrorResponse(c, 500, "GetDonations err is: "+err.Error())
 		return
 	}
-	utils.BuildSuccessResponse(c, donations)
+	// 统计捐款总金额
+	var totalCount float64
+	for _, donation := range donations {
+		totalCount += *donation.Money
+	}
+	utils.BuildSuccessResponse(c, gin.H{
+		"donations":  donations,
+		"totalCount": totalCount,
+	})
 }
 
 func DeleteDonation(c *gin.Context) {

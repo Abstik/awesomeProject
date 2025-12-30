@@ -7,8 +7,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/main .
 
-# 使用 distroless 镜像（比 alpine 更安全）
-FROM gcr.io/distroless/static-debian12
+FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/main .
 CMD ["/app/main"]

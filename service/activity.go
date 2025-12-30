@@ -16,7 +16,7 @@ func GetActivityList(pageSize *int, pageNum *int) ([]*model.ActivityPO, int64, e
 		return nil, 0, err
 	}
 	for _, v := range res {
-		v.Img = utils.FullURL(v.Img)
+		v.Img = utils.OldFullURL(v.Img)
 	}
 	return res, total, nil
 }
@@ -30,7 +30,7 @@ func GetActivityByAid(aid int64) (*model.ActivityPO, error) {
 	content := FullImageURLs(*res.Content)
 	res.Content = &content
 
-	res.Img = utils.FullURL(res.Img)
+	res.Img = utils.OldFullURL(res.Img)
 	return res, nil
 }
 
@@ -44,7 +44,7 @@ func FullImageURLs(input string) string {
 			return match
 		}
 
-		fullURL := utils.FullURL(&subMatches[2])
+		fullURL := utils.OldFullURL(&subMatches[2])
 		url := subMatches[1] + *fullURL + subMatches[3]
 		return url
 	})

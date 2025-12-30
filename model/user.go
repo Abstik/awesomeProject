@@ -28,7 +28,8 @@ type MemberRequest struct {
 
 // 更新用户信息的请求体
 type UpdateMemberRequest struct {
-	Username    *string `json:"username"`    // 用户名
+	Username    *string `json:"username"` // 用户名
+	Password    *string `json:"password"`
 	Name        *string `json:"name"`        // 姓名
 	Tel         *string `json:"tel"`         // 电话
 	Gender      *int    `json:"gender"`      // 性别，0为男生，1为女生

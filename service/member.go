@@ -93,9 +93,9 @@ func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]mo
 	}
 
 	for i := range res {
-		res[i].Portrait = utils.FullURL(res[i].Portrait)
-		res[i].MienImg = utils.FullURL(res[i].MienImg)
-		res[i].GraduateImg = utils.FullURL(res[i].GraduateImg)
+		res[i].Portrait = utils.OldFullURL(res[i].Portrait)
+		res[i].MienImg = utils.OldFullURL(res[i].MienImg)
+		res[i].GraduateImg = utils.OldFullURL(res[i].GraduateImg)
 	}
 	return res, total, nil
 }
@@ -106,34 +106,101 @@ func GetMemberByUsername(userName string) (*model.MemberPO, error) {
 	if err != nil {
 		return nil, err
 	}
-	member.Portrait = utils.FullURL(member.Portrait)
-	member.MienImg = utils.FullURL(member.MienImg)
-	member.GraduateImg = utils.FullURL(member.GraduateImg)
+	member.Portrait = utils.OldFullURL(member.Portrait)
+	member.MienImg = utils.OldFullURL(member.MienImg)
+	member.GraduateImg = utils.OldFullURL(member.GraduateImg)
 	return member, nil
 }
 
 func GetMemberByName(name string) ([]model.MemberPO, error) {
 	res, err := dao.GetMemberByName(name)
+	var ans []model.MemberPO
 	for i := range res {
-		res[i].Portrait = utils.FullURL(res[i].Portrait)
-		res[i].MienImg = utils.FullURL(res[i].MienImg)
-		res[i].GraduateImg = utils.FullURL(res[i].GraduateImg)
+		if *res[i].Status == 0 {
+			continue
+		}
+		res[i].Portrait = utils.OldFullURL(res[i].Portrait)
+		res[i].MienImg = utils.OldFullURL(res[i].MienImg)
+		res[i].GraduateImg = utils.OldFullURL(res[i].GraduateImg)
+		ans = append(ans, res[i])
 	}
-	return res, err
+	return ans, err
 }
 
-func UpdateMember(req model.UpdateMemberRequest, statusInt int) error {
+func UserUpdateMember(req model.UpdateMemberRequest) error {
 	// 查询用户是否存在
 	member, err := dao.GetMemberByUsername(*req.Username)
 	if err != nil {
 		return errors.New("user not found")
 	}
 
+	if *member.Status == 0 {
+		return errors.New("无法修改管理员账号")
+	}
+
 	// 判断请求用户是否和修改用户是否一致
 	if *member.Username != *req.Username {
-		if statusInt != 0 {
-			return errors.New("无权限")
-		}
+		return errors.New("无权限")
+	}
+
+	// 更新用户字段（仅更新非空字段）
+	if req.Name != nil {
+		member.Name = req.Name
+	}
+	if req.Password != nil {
+		*member.Password = utils.EncryptPassword(*req.Password)
+	}
+	if req.Tel != nil {
+		member.Tel = req.Tel
+	}
+	if req.Gender != nil {
+		member.Gender = req.Gender
+	}
+	if req.ClassGrade != nil {
+		member.ClassGrade = req.ClassGrade
+	}
+	if req.Team != nil {
+		member.Team = req.Team
+	}
+	if req.Portrait != nil {
+		member.Portrait = utils.ParseURL(req.Portrait)
+	}
+	if req.MienImg != nil {
+		member.MienImg = utils.ParseURL(req.MienImg)
+	}
+	if req.Company != nil {
+		member.Company = req.Company
+	}
+	if req.GraduateImg != nil {
+		member.GraduateImg = utils.ParseURL(req.GraduateImg)
+	}
+	if req.IsGraduate != nil {
+		member.IsGraduate = req.IsGraduate
+	}
+	if req.Signature != nil {
+		member.Signature = req.Signature
+	}
+	if req.Year != nil {
+		member.Year = req.Year
+	}
+
+	// 调用 DAO 层保存更新
+	if err := dao.UpdateMember(member); err != nil {
+		return errors.New("failed to update user in database")
+	}
+
+	return nil
+}
+
+func AdminUpdateMember(req model.UpdateMemberRequest) error {
+	// 查询用户是否存在
+	member, err := dao.GetMemberByUsername(*req.Username)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if *member.Status == 0 {
+		return errors.New("无法修改管理员账号")
 	}
 
 	// 更新用户字段（仅更新非空字段）

@@ -30,6 +30,8 @@ func SetupRegisterRouter(r *gin.Engine) {
 		apiGroup.GET("/userinfo", middleware.JWTAuthMiddleware(), handler.GetMemberByUserName)
 		// 根据姓名name查询个人信息
 		apiGroup.GET("/member", middleware.JWTAuthMiddleware(), handler.GetMemberByName)
+		// 重置用户密码
+		apiGroup.POST("/reset_password", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.ResetPassword)
 	}
 
 	{
