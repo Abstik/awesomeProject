@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  backend:
+    image: xichen001/xupt-backend:latest
+    container_name: ${BACKEND_CONTAINER_NAME}
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - GO_ENV=${GO_ENV}
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - DEFAULT_PORTRAIT=${DEFAULT_PORTRAIT}
+      - DEFAULT_MIEN_IMG=${DEFAULT_MIEN_IMG}
+      - DEFAULT_GRADUATE_IMG=${DEFAULT_GRADUATE_IMG}
+    volumes:
+      - ./backend/logs:/app/logs
+      - ./backend/res:/app/res/
+      - ./backend/videos:/app/videos/
+    networks:
+      app-network:
+        aliases:
+          - backend
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    image: xichen001/xupt-frontend:latest
+    volumes:
+      - ./frontend/nginx/logs:/var/log/nginx
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  mysql:
+    image: mysql:8.0
+    container_name: ${MYSQL_CONTAINER_NAME}
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    volumes:
+      - mysql_prod_data:/var/lib/mysql
+      - ./db_prod/:/docker-entrypoint-initdb.d/
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+
+volumes:
+  mysql_prod_data:
+
+networks:
+  app-network:
+    name: XUPT_app
+    driver: bridge
+    external: true
