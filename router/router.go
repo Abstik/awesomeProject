@@ -107,4 +107,11 @@ func SetupRegisterRouter(r *gin.Engine) {
 		// 查询视频
 		apiGroup.GET("/videos", handler.GetAllVideos)
 	}
+
+	{
+		// 更新简介
+		apiGroup.POST("/introduction", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.UpdateIntroduction)
+		// 查询简介
+		apiGroup.GET("/introduction", handler.GetIntroduction)
+	}
 }

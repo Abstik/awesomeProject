@@ -24,11 +24,11 @@ func UpdateContact(c *gin.Context) {
 	var contact *model.ContactPO
 	err := c.ShouldBindJSON(&contact)
 	if err != nil {
-		utils.BuildErrorResponse(c, 400, "AddContact format error, error is "+err.Error())
+		utils.BuildErrorResponse(c, 400, "UpdateContact format error, error is "+err.Error())
 	}
 
 	if err := dao.UpdateContact(contact); err != nil {
-		utils.BuildErrorResponse(c, 500, "AddContact failed err is: "+err.Error())
+		utils.BuildErrorResponse(c, 500, "UpdateContact failed err is: "+err.Error())
 	}
 	utils.BuildSuccessResponse(c, "更新成功")
 }

@@ -29,6 +29,10 @@ func Register(c *gin.Context) {
 
 	err = service.Register(memReq)
 	if err != nil {
+		if err.Error() == "用户名已存在" {
+			utils.BuildErrorResponse(c, 400, "用户名已存在")
+			return
+		}
 		utils.BuildErrorResponse(c, 500, "服务器繁忙")
 		return
 	}
@@ -225,7 +229,7 @@ func ResetPassword(c *gin.Context) {
 	if err != nil {
 		utils.BuildErrorResponse(c, 400, err.Error())
 	}
-	if user.Status == nil || user.Username == nil {
+	if user == nil || user.Status == nil || user.Username == nil {
 		utils.BuildErrorResponse(c, 500, "此用户状态不合法")
 	}
 	if *user.Status == 0 {
