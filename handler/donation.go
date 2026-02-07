@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"awesomeProject/dao"
 	"awesomeProject/model"
 	"awesomeProject/service"
 	"awesomeProject/utils"
@@ -14,13 +13,13 @@ import (
 func AddDonations(c *gin.Context) {
 	var req model.AddDonationsReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.BuildErrorResponse(c, 500, "AddDonations parse failed err is: "+err.Error())
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
 
 	// 调用 service 层处理
 	if err := service.AddDonations(req); err != nil {
-		utils.BuildErrorResponse(c, 500, "AddDonations insert failed err is: "+err.Error())
+		utils.BuildServerError(c, "添加捐款失败", err)
 		return
 	}
 
@@ -31,18 +30,13 @@ func AddDonations(c *gin.Context) {
 func GetDonations(c *gin.Context) {
 	year := c.Query("year")
 	if year == "" {
-		utils.BuildErrorResponse(c, 400, "GetDonations year is empty")
+		utils.BuildErrorResponse(c, 400, "year 为必传参数")
 		return
 	}
-	donations, err := dao.GetDonations(year)
+	donations, totalCount, err := service.GetDonations(year)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "GetDonations err is: "+err.Error())
+		utils.BuildServerError(c, "查询捐款失败", err)
 		return
-	}
-	// 统计捐款总金额
-	var totalCount float64
-	for _, donation := range donations {
-		totalCount += *donation.Money
 	}
 	utils.BuildSuccessResponse(c, gin.H{
 		"donations":  donations,
@@ -54,17 +48,17 @@ func DeleteDonation(c *gin.Context) {
 	// 从查询参数中获取 id
 	idStr := c.Query("id")
 	if idStr == "" {
-		utils.BuildErrorResponse(c, 400, "DeleteDonation id is empty")
+		utils.BuildErrorResponse(c, 400, "id 为必传参数")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		utils.BuildErrorResponse(c, 400, "DeleteDonation id is not a number")
+		utils.BuildErrorResponse(c, 400, "id 参数格式有误")
 		return
 	}
-	if err := dao.DeleteDonation(id); err != nil {
-		utils.BuildErrorResponse(c, 500, "DeleteDonation err is: "+err.Error())
+	if err := service.DeleteDonation(id); err != nil {
+		utils.BuildServerError(c, "删除捐款失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, "删除成功")

@@ -9,9 +9,15 @@ import (
 	"awesomeProject/utils"
 )
 
-func GetActivityList(pageSize *int, pageNum *int) ([]*model.ActivityPO, int64, error) {
+// 预编译正则，避免每次调用重新编译
+var (
+	imgSrcRe  = regexp.MustCompile(`(?i)(<img[^>]+src=["'])(/res/[^"']+)(["'])`)
+	fullURLRe = regexp.MustCompile(`(?i)(src|poster)=["']https?://[^/]+(/res/[^"']+)["']`)
+)
+
+func GetActivityList(pageSize, pageNum int) ([]*model.ActivityPO, int64, error) {
 	// 分页查询活动
-	res, total, err := dao.GetActivityListByPage(*pageSize, *pageNum)
+	res, total, err := dao.GetActivityListByPage(pageSize, pageNum)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -27,8 +33,10 @@ func GetActivityByAid(aid int64) (*model.ActivityPO, error) {
 		return nil, err
 	}
 
-	content := FullImageURLs(*res.Content)
-	res.Content = &content
+	if res.Content != nil {
+		content := FullImageURLs(*res.Content)
+		res.Content = &content
+	}
 
 	res.Img = utils.OldFullURL(res.Img)
 	return res, nil
@@ -36,10 +44,8 @@ func GetActivityByAid(aid int64) (*model.ActivityPO, error) {
 
 // 替换html中图片的相对路径为绝对路径
 func FullImageURLs(input string) string {
-	re := regexp.MustCompile(`(?i)(<img[^>]+src=["'])(/res/[^"']+)(["'])`)
-
-	return re.ReplaceAllStringFunc(input, func(match string) string {
-		subMatches := re.FindStringSubmatch(match)
+	return imgSrcRe.ReplaceAllStringFunc(input, func(match string) string {
+		subMatches := imgSrcRe.FindStringSubmatch(match)
 		if len(subMatches) != 4 {
 			return match
 		}
@@ -52,11 +58,8 @@ func FullImageURLs(input string) string {
 
 // 替换html中图片绝对路径为相对路径
 func ParseImageURLS(html string) string {
-	// 匹配 src="http://域名/res/xxx" 或 poster="http://域名/res/xxx"
-	re := regexp.MustCompile(`(?i)(src|poster)=["']https?://[^/]+(/res/[^"']+)["']`)
-
-	return re.ReplaceAllStringFunc(html, func(match string) string {
-		subMatches := re.FindStringSubmatch(match)
+	return fullURLRe.ReplaceAllStringFunc(html, func(match string) string {
+		subMatches := fullURLRe.FindStringSubmatch(match)
 		if len(subMatches) != 3 {
 			return match
 		}
@@ -79,8 +82,7 @@ func AddActivity(req *model.ActivityReq) error {
 	}
 	now := time.Now()
 	activity.Time = &now
-	err := dao.InsertActivity(activity)
-	return err
+	return dao.InsertActivity(activity)
 }
 
 func UpdateActivity(req *model.ActivityReq) error {
@@ -98,6 +100,10 @@ func UpdateActivity(req *model.ActivityReq) error {
 		content := ParseImageURLS(*req.Content)
 		activity.Content = &content
 	}
-	err := dao.UpdateActivity(activity)
-	return err
+	return dao.UpdateActivity(activity)
+}
+
+// DeleteActivity 删除活动
+func DeleteActivity(aid int64) error {
+	return dao.DeleteActivity(aid)
 }

@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"awesomeProject/dao"
 	"awesomeProject/model"
 	"awesomeProject/service"
 	"awesomeProject/utils"
@@ -15,25 +15,20 @@ import (
 
 // 添加成员
 func Register(c *gin.Context) {
-	var memReq *model.MemberRequest
-	err := c.ShouldBindJSON(&memReq)
+	var req *model.RegisterReq
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
-	// 参数校验
-	if memReq.Username == nil || memReq.Name == nil || memReq.Year == nil || memReq.Team == nil {
-		utils.BuildErrorResponse(c, 400, "参数格式有误")
-		return
-	}
 
-	err = service.Register(memReq)
+	err = service.Register(req)
 	if err != nil {
 		if err.Error() == "用户名已存在" {
 			utils.BuildErrorResponse(c, 400, "用户名已存在")
 			return
 		}
-		utils.BuildErrorResponse(c, 500, "服务器繁忙")
+		utils.BuildServerError(c, "注册失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, "注册成功")
@@ -41,31 +36,32 @@ func Register(c *gin.Context) {
 
 // 用户登录
 func Login(c *gin.Context) {
-	var memReq *model.MemberRequest
-	err := c.ShouldBindJSON(&memReq)
+	var req *model.LoginReq
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
-	// 参数校验
-	if memReq.Username == nil || memReq.Password == nil || memReq.CaptchaID == nil || memReq.CaptchaData == nil {
-		utils.BuildErrorResponse(c, 400, "参数格式有误")
-	}
 
 	// 校验验证码
-	if ok := VerifyCaptcha(*memReq.CaptchaID, *memReq.CaptchaData); !ok {
+	if ok := VerifyCaptcha(*req.CaptchaID, *req.CaptchaData); !ok {
 		utils.BuildErrorResponse(c, 400, "验证码有误")
 		return
 	}
 
-	data, err := service.Login(memReq)
+	data, err := service.Login(req)
 	if err != nil {
-		// 如果是用户名不存在
+		// 如果是用户名不存在或密码错误，记录警告日志用于安全审计
 		if err.Error() == "用户名不存在" || err.Error() == "密码错误" {
+			zap.L().Warn("登录失败",
+				zap.String("username", *req.Username),
+				zap.String("ip", c.ClientIP()),
+				zap.String("reason", err.Error()),
+			)
 			utils.BuildErrorResponse(c, 400, "用户名或密码错误")
 			return
 		}
-		utils.BuildErrorResponse(c, 500, "服务器繁忙")
+		utils.BuildServerError(c, "登录失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, data)
@@ -95,24 +91,36 @@ func GetMemberList(c *gin.Context) {
 		}
 	}
 	if pageSizeStr != "" {
-		pageSizeInt, _ := strconv.Atoi(pageSizeStr)
+		pageSizeInt, err := strconv.Atoi(pageSizeStr)
+		if err != nil {
+			utils.BuildErrorResponse(c, 400, "pageSize 参数格式有误")
+			return
+		}
 		pageSize = &pageSizeInt
 	}
 	if pageNumStr != "" {
-		pageNumInt, _ := strconv.Atoi(pageNumStr)
+		pageNumInt, err := strconv.Atoi(pageNumStr)
+		if err != nil {
+			utils.BuildErrorResponse(c, 400, "pageNum 参数格式有误")
+			return
+		}
 		pageNum = &pageNumInt
 	}
 	if teamStr != "" {
 		team = &teamStr
 	}
 	if yearStr != "" {
-		yearInt, _ := strconv.Atoi(yearStr)
+		yearInt, err := strconv.Atoi(yearStr)
+		if err != nil {
+			utils.BuildErrorResponse(c, 400, "year 参数格式有误")
+			return
+		}
 		year = &yearInt
 	}
 
 	res, total, err := service.GetMemberList(team, isGraduate, pageSize, pageNum, year)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "服务器繁忙")
+		utils.BuildServerError(c, "查询成员列表失败", err)
 		return
 	}
 
@@ -127,32 +135,38 @@ func ChangeMemberInfo(c *gin.Context) {
 	// 定义请求体结构
 	var req model.UpdateMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.BuildErrorResponse(c, 400, "Invalid JSON data")
-		return
-	}
-
-	// 检查必填参数Username
-	if req.Username == nil {
-		utils.BuildErrorResponse(c, 400, "username is required")
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
 
 	status, ok := c.Get("status")
 	if !ok {
-		utils.BuildErrorResponse(c, 500, "status is not found")
+		utils.BuildServerError(c, "用户状态获取失败", errors.New("status not found in context"))
 		return
 	}
-	statusInt := status.(int)
+	statusInt, ok := status.(int)
+	if !ok {
+		utils.BuildServerError(c, "用户状态类型异常", errors.New("status type assertion failed"))
+		return
+	}
+
+	// 从 JWT 上下文获取当前登录用户名
+	authUsername, _ := c.Get("username")
+	authUsernameStr, _ := authUsername.(string)
 
 	// 调用 Service 层更新用户信息
-	var err error
-	if statusInt == 0 {
-		err = service.AdminUpdateMember(req)
-	} else {
-		err = service.UserUpdateMember(req)
+	var authPtr *string
+	if statusInt != 0 {
+		// 普通用户传指针，管理员为nil
+		authPtr = &authUsernameStr
 	}
+	err := service.UpdateMember(req, authPtr)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, err.Error())
+		if err.Error() == "无权限修改他人信息" || err.Error() == "无法修改管理员账号" {
+			utils.BuildErrorResponse(c, 403, err.Error())
+		} else {
+			utils.BuildServerError(c, "修改失败", err)
+		}
 		return
 	}
 
@@ -164,14 +178,14 @@ func ChangeMemberInfo(c *gin.Context) {
 func GetMemberByUserName(c *gin.Context) {
 	userName := c.Query("username")
 	if userName == "" {
-		utils.BuildErrorResponse(c, 400, "username is not found")
+		utils.BuildErrorResponse(c, 400, "username 为必传参数")
 		return
 	}
 
 	// 调用 Service 层获取用户数据
 	member, err := service.GetMemberByUsername(userName)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		utils.BuildErrorResponse(c, 500, "查询失败")
+		utils.BuildServerError(c, "查询用户失败", err)
 		return
 	}
 
@@ -182,14 +196,14 @@ func GetMemberByUserName(c *gin.Context) {
 func GetMemberByName(c *gin.Context) {
 	name := c.Query("name")
 	if name == "" {
-		utils.BuildErrorResponse(c, 400, "name is not found")
+		utils.BuildErrorResponse(c, 400, "name 为必传参数")
 		return
 	}
 
 	// 调用 Service 层获取用户数据
 	members, err := service.GetMemberByName(name)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		utils.BuildErrorResponse(c, 500, "查询失败")
+		utils.BuildServerError(c, "查询成员失败", err)
 		return
 	}
 
@@ -200,24 +214,26 @@ func GetMemberByName(c *gin.Context) {
 func GetYears(c *gin.Context) {
 	years, err := service.GetYears()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		utils.BuildErrorResponse(c, 500, "查询失败")
+		utils.BuildServerError(c, "查询年份失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, years)
-	return
 }
 
 func DeleteMember(c *gin.Context) {
 	uidStr := c.Query("uid")
 	if uidStr == "" {
-		utils.BuildErrorResponse(c, 400, "uidStr is not found")
+		utils.BuildErrorResponse(c, 400, "uid 为必传参数")
 		return
 	}
 
-	uid, _ := strconv.ParseInt(uidStr, 10, 64)
-	err := dao.DeleteMember(uid)
+	uid, err := strconv.ParseInt(uidStr, 10, 64)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "DeleteMember failed err is: "+err.Error())
+		utils.BuildErrorResponse(c, 400, "uid 参数格式有误")
+		return
+	}
+	if err := service.DeleteMember(uid); err != nil {
+		utils.BuildServerError(c, "删除成员失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, "删除成功")
@@ -225,22 +241,21 @@ func DeleteMember(c *gin.Context) {
 
 func ResetPassword(c *gin.Context) {
 	username := c.PostForm("username")
-	user, err := dao.GetMemberByUsername(username)
-	if err != nil {
-		utils.BuildErrorResponse(c, 400, err.Error())
-	}
-	if user == nil || user.Status == nil || user.Username == nil {
-		utils.BuildErrorResponse(c, 500, "此用户状态不合法")
-	}
-	if *user.Status == 0 {
-		utils.BuildErrorResponse(c, 400, "无法修改管理员账号")
+	if username == "" {
+		utils.BuildErrorResponse(c, 400, "username 为必传参数")
+		return
 	}
 
-	password := utils.EncryptPassword(*user.Username + "123")
-
-	err = dao.ResetPassword(username, password)
+	err := service.ResetPassword(username)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, err.Error())
+		if err.Error() == "用户不存在" || err.Error() == "无法修改管理员账号" {
+			utils.BuildErrorResponse(c, 400, err.Error())
+			return
+		}
+		utils.BuildServerError(c, "重置密码失败", err)
+		return
 	}
-	utils.BuildSuccessResponse(c, "重置成功")
+	utils.BuildSuccessResponse(c, gin.H{
+		"message": "重置成功，密码已重置为 用户名+123",
+	})
 }

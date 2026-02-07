@@ -30,18 +30,12 @@ func QueryTeams(name string, isExist *bool, isUser bool) ([]model.TeamPO, error)
 		query = query.Select("tid, name, bref_info, train_plan, is_exist")
 	}
 
-	if err := query.Find(&teams).Error; err != nil {
+	if err := query.Order("tid ASC").Find(&teams).Error; err != nil {
 		return nil, err
 	}
 	return teams, nil
 }
 
-func UpdateTeam(req model.AddTeamReq) error {
-	// 更新非零值字段
-	return db.Model(&model.TeamPO{}).Where("tid = ?", req.Tid).Updates(model.TeamPO{
-		Name:      req.Name,
-		BrefInfo:  req.BrefInfo,
-		TrainPlan: req.TrainPlan,
-		IsExist:   req.IsExist,
-	}).Error
+func UpdateTeam(team *model.TeamPO) error {
+	return db.Model(&model.TeamPO{}).Where("tid = ?", team.Tid).Updates(team).Error
 }

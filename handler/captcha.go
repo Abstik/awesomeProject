@@ -24,7 +24,7 @@ func GetCaptcha(c *gin.Context) {
 	// 生成验证码
 	captchaID, captchaBase64, _, err := captcha.Generate()
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "生成验证码失败")
+		utils.BuildServerError(c, "生成验证码失败", err)
 		return
 	}
 

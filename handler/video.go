@@ -24,12 +24,27 @@ func init() {
 	}
 }
 
+// isSafePath 检查路径是否安全（不包含路径穿越字符）
+func isSafePath(name string) bool {
+	cleaned := filepath.Clean(name)
+	if strings.Contains(cleaned, "..") || strings.ContainsAny(name, `/\`) {
+		return false
+	}
+	return true
+}
+
 // ------------------- 上传视频 -------------------
 func UploadOrUpdateVideo(c *gin.Context) {
 	// 获取类别名称
 	category := c.PostForm("category")
 	if category == "" {
 		utils.BuildErrorResponse(c, http.StatusBadRequest, "category 为必传参数")
+		return
+	}
+
+	// 防止路径穿越
+	if !isSafePath(category) {
+		utils.BuildErrorResponse(c, http.StatusBadRequest, "category 包含非法字符")
 		return
 	}
 
@@ -40,11 +55,17 @@ func UploadOrUpdateVideo(c *gin.Context) {
 		return
 	}
 
+	// 防止文件名路径穿越
+	if !isSafePath(file.Filename) {
+		utils.BuildErrorResponse(c, http.StatusBadRequest, "文件名包含非法字符")
+		return
+	}
+
 	// 打开目录
 	categoryDir := filepath.Join(videoUploadDir, category)
 	if _, err := os.Stat(categoryDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(categoryDir, os.ModePerm); err != nil {
-			utils.BuildErrorResponse(c, http.StatusInternalServerError, "创建类别目录失败")
+			utils.BuildServerError(c, "创建类别目录失败", err)
 			return
 		}
 	}
@@ -54,7 +75,7 @@ func UploadOrUpdateVideo(c *gin.Context) {
 	// 文件的相对路径
 	outputPath := filepath.Join(categoryDir, filename)
 	if err := c.SaveUploadedFile(file, outputPath); err != nil {
-		utils.BuildErrorResponse(c, http.StatusInternalServerError, "保存视频文件失败")
+		utils.BuildServerError(c, "保存视频文件失败", err)
 		return
 	}
 	// 去除文件路径的.前缀
@@ -75,8 +96,31 @@ func DeleteVideoByURL(c *gin.Context) {
 		return
 	}
 
-	url := utils.ParseURL(&videoURL)
-	localPath := "." + *url
+	parsedPath := utils.ParseURL(&videoURL)
+	if parsedPath == nil || *parsedPath == "" {
+		utils.BuildErrorResponse(c, http.StatusBadRequest, "非法的 URL")
+		return
+	}
+
+	// 仅允许 /videos/ 开头的路径，防止路径穿越
+	if !strings.HasPrefix(*parsedPath, "/videos/") {
+		utils.BuildErrorResponse(c, http.StatusBadRequest, "非法的资源路径")
+		return
+	}
+
+	localPath := filepath.Join(".", *parsedPath)
+
+	// 解析后再次检查是否在 videos 目录内
+	absLocal, err := filepath.Abs(localPath)
+	if err != nil {
+		utils.BuildErrorResponse(c, http.StatusBadRequest, "路径解析失败")
+		return
+	}
+	absVideos, _ := filepath.Abs(videoUploadDir)
+	if !strings.HasPrefix(absLocal, absVideos) {
+		utils.BuildErrorResponse(c, http.StatusBadRequest, "非法的资源路径")
+		return
+	}
 
 	// 检查文件是否存在
 	if _, err := os.Stat(localPath); os.IsNotExist(err) {
@@ -86,7 +130,7 @@ func DeleteVideoByURL(c *gin.Context) {
 
 	// 删除文件
 	if err := os.Remove(localPath); err != nil {
-		utils.BuildErrorResponse(c, http.StatusInternalServerError, "删除文件失败")
+		utils.BuildServerError(c, "删除视频失败", err)
 		return
 	}
 
@@ -95,7 +139,11 @@ func DeleteVideoByURL(c *gin.Context) {
 
 // ------------------- 获取所有类别视频 -------------------
 func GetAllVideos(c *gin.Context) {
-	categories, _ := os.ReadDir(videoUploadDir)
+	categories, err := os.ReadDir(videoUploadDir)
+	if err != nil {
+		utils.BuildServerError(c, "读取视频目录失败", err)
+		return
+	}
 	result := []gin.H{}
 
 	for _, cat := range categories {
@@ -104,7 +152,10 @@ func GetAllVideos(c *gin.Context) {
 		}
 
 		categoryDir := filepath.Join(videoUploadDir, cat.Name())
-		files, _ := os.ReadDir(categoryDir)
+		files, err := os.ReadDir(categoryDir)
+		if err != nil {
+			continue
+		}
 		if len(files) == 0 {
 			continue
 		}

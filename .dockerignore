@@ -1,12 +1,27 @@
-# 忽略 Git 和编辑器配置
+# Git 和编辑器配置
 .git
-*.log
+.gitignore
 .vscode
 .idea
-.gitignore
-*.tar
-# 忽略开发 Dockerfile
-Dockerfile.dev
 
-# 忽略构建产物
-/app/main
+# 环境和敏感文件
+.env
+*.sql
+db_prod/
+
+# 日志和运行时资源
+*.log
+logs/
+res/
+videos/
+
+# 构建产物
+main
+*.tar
+
+# Docker 相关
+Dockerfile.dev
+docker-compose*.yml
+
+# 文档
+*.md

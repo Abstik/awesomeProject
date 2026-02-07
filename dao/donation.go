@@ -2,10 +2,6 @@ package dao
 
 import "awesomeProject/model"
 
-func InsertDonation(donation model.DonationPO) error {
-	return db.Create(&donation).Error
-}
-
 func BulkInsertDonations(donations []model.DonationPO) error {
 	return db.Create(&donations).Error
 }

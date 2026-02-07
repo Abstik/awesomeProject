@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -15,7 +16,7 @@ import (
 )
 
 // 用户注册
-func Register(mem *model.MemberRequest) error {
+func Register(mem *model.RegisterReq) error {
 	// 检查用户名是否已存在
 	if _, err := dao.GetMemberByUsername(*mem.Username); err == nil {
 		// 如果查询到则返回错误
@@ -32,7 +33,11 @@ func Register(mem *model.MemberRequest) error {
 		isGraduate = 0
 	}
 
-	password := utils.EncryptPassword(*mem.Username + "123")
+	// 默认密码为 用户名+123，使用 bcrypt 哈希
+	password, err := utils.HashPassword(*mem.Username + "123")
+	if err != nil {
+		return fmt.Errorf("密码加密失败: %w", err)
+	}
 
 	defaultPortrait := os.Getenv("DEFAULT_PORTRAIT")
 	defaultMienImg := os.Getenv("DEFAULT_MIEN_IMG")
@@ -52,15 +57,19 @@ func Register(mem *model.MemberRequest) error {
 		MienImg:     &defaultMienImg,
 		GraduateImg: &defaultGraduateImg,
 	}
-	err := dao.InsertMember(memPO)
-	if err != nil {
+	if err := dao.InsertMember(memPO); err != nil {
 		return err
 	}
 	return nil
 }
 
+// 删除成员
+func DeleteMember(uid int64) error {
+	return dao.DeleteMember(uid)
+}
+
 // 用户登录
-func Login(req *model.MemberRequest) (gin.H, error) {
+func Login(req *model.LoginReq) (gin.H, error) {
 	// 根据用户名查询用户信息
 	user, err := dao.GetMemberByUsername(*req.Username)
 	if err != nil {
@@ -71,7 +80,7 @@ func Login(req *model.MemberRequest) (gin.H, error) {
 	}
 
 	// 密码校验
-	if *user.Password != utils.EncryptPassword(*req.Password) {
+	if !utils.CheckPassword(*req.Password, *user.Password) {
 		return nil, errors.New("密码错误")
 	}
 
@@ -85,6 +94,13 @@ func Login(req *model.MemberRequest) (gin.H, error) {
 	return response, err
 }
 
+// fillMemberURLs 填充成员图片的完整 URL
+func fillMemberURLs(m *model.MemberPO) {
+	m.Portrait = utils.OldFullURL(m.Portrait)
+	m.MienImg = utils.OldFullURL(m.MienImg)
+	m.GraduateImg = utils.OldFullURL(m.GraduateImg)
+}
+
 // 批量查询成员
 func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]model.MemberPO, int64, error) {
 	res, total, err := dao.GetMemberList(team, isGraduate, pageSize, pageNum, year)
@@ -93,9 +109,7 @@ func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]mo
 	}
 
 	for i := range res {
-		res[i].Portrait = utils.OldFullURL(res[i].Portrait)
-		res[i].MienImg = utils.OldFullURL(res[i].MienImg)
-		res[i].GraduateImg = utils.OldFullURL(res[i].GraduateImg)
+		fillMemberURLs(&res[i])
 	}
 	return res, total, nil
 }
@@ -106,104 +120,23 @@ func GetMemberByUsername(userName string) (*model.MemberPO, error) {
 	if err != nil {
 		return nil, err
 	}
-	member.Portrait = utils.OldFullURL(member.Portrait)
-	member.MienImg = utils.OldFullURL(member.MienImg)
-	member.GraduateImg = utils.OldFullURL(member.GraduateImg)
+	fillMemberURLs(member)
 	return member, nil
 }
 
 func GetMemberByName(name string) ([]model.MemberPO, error) {
 	res, err := dao.GetMemberByName(name)
-	var ans []model.MemberPO
+	if err != nil {
+		return nil, err
+	}
 	for i := range res {
-		if *res[i].Status == 0 {
-			continue
-		}
-		res[i].Portrait = utils.OldFullURL(res[i].Portrait)
-		res[i].MienImg = utils.OldFullURL(res[i].MienImg)
-		res[i].GraduateImg = utils.OldFullURL(res[i].GraduateImg)
-		ans = append(ans, res[i])
+		fillMemberURLs(&res[i])
 	}
-	return ans, err
+	return res, nil
 }
 
-func UserUpdateMember(req model.UpdateMemberRequest) error {
-	// 查询用户是否存在
-	member, err := dao.GetMemberByUsername(*req.Username)
-	if err != nil {
-		return errors.New("user not found")
-	}
-
-	if *member.Status == 0 {
-		return errors.New("无法修改管理员账号")
-	}
-
-	// 判断请求用户是否和修改用户是否一致
-	if *member.Username != *req.Username {
-		return errors.New("无权限")
-	}
-
-	// 更新用户字段（仅更新非空字段）
-	if req.Name != nil {
-		member.Name = req.Name
-	}
-	if req.Password != nil {
-		*member.Password = utils.EncryptPassword(*req.Password)
-	}
-	if req.Tel != nil {
-		member.Tel = req.Tel
-	}
-	if req.Gender != nil {
-		member.Gender = req.Gender
-	}
-	if req.ClassGrade != nil {
-		member.ClassGrade = req.ClassGrade
-	}
-	if req.Team != nil {
-		member.Team = req.Team
-	}
-	if req.Portrait != nil {
-		member.Portrait = utils.ParseURL(req.Portrait)
-	}
-	if req.MienImg != nil {
-		member.MienImg = utils.ParseURL(req.MienImg)
-	}
-	if req.Company != nil {
-		member.Company = req.Company
-	}
-	if req.GraduateImg != nil {
-		member.GraduateImg = utils.ParseURL(req.GraduateImg)
-	}
-	if req.IsGraduate != nil {
-		member.IsGraduate = req.IsGraduate
-	}
-	if req.Signature != nil {
-		member.Signature = req.Signature
-	}
-	if req.Year != nil {
-		member.Year = req.Year
-	}
-
-	// 调用 DAO 层保存更新
-	if err := dao.UpdateMember(member); err != nil {
-		return errors.New("failed to update user in database")
-	}
-
-	return nil
-}
-
-func AdminUpdateMember(req model.UpdateMemberRequest) error {
-	// 查询用户是否存在
-	member, err := dao.GetMemberByUsername(*req.Username)
-	if err != nil {
-		return errors.New("user not found")
-	}
-
-	if *member.Status == 0 {
-		return errors.New("无法修改管理员账号")
-	}
-
-	// 更新用户字段（仅更新非空字段）
+// applyMemberUpdates 将请求中的非空字段更新到成员对象（公共逻辑）
+func applyMemberUpdates(member *model.MemberPO, req model.UpdateMemberRequest) {
 	if req.Name != nil {
 		member.Name = req.Name
 	}
@@ -240,13 +173,54 @@ func AdminUpdateMember(req model.UpdateMemberRequest) error {
 	if req.Year != nil {
 		member.Year = req.Year
 	}
+}
+
+// UpdateMember 修改用户信息，authUsername 非空时校验权限（普通用户场景）
+func UpdateMember(req model.UpdateMemberRequest, authUsername *string) error {
+	// 普通用户只能修改自己的信息
+	if authUsername != nil && *req.Username != *authUsername {
+		return errors.New("无权限修改他人信息")
+	}
+
+	// 查询用户是否存在
+	member, err := dao.GetMemberByUsername(*req.Username)
+	if err != nil {
+		return errors.New("用户不存在")
+	}
+
+	if *member.Status == 0 {
+		return errors.New("无法修改管理员账号")
+	}
+
+	applyMemberUpdates(member, req)
 
 	// 调用 DAO 层保存更新
 	if err := dao.UpdateMember(member); err != nil {
-		return errors.New("failed to update user in database")
+		return fmt.Errorf("更新用户信息失败: %w", err)
 	}
 
 	return nil
+}
+
+// ResetPassword 重置用户密码为 用户名+"123"
+func ResetPassword(username string) error {
+	user, err := dao.GetMemberByUsername(username)
+	if err != nil {
+		return errors.New("用户不存在")
+	}
+	if user == nil || user.Status == nil || user.Username == nil {
+		return errors.New("用户数据异常")
+	}
+	if *user.Status == 0 {
+		return errors.New("无法修改管理员账号")
+	}
+
+	hashedPassword, err := utils.HashPassword(username + "123")
+	if err != nil {
+		return fmt.Errorf("密码加密失败: %w", err)
+	}
+
+	return dao.ResetPassword(username, hashedPassword)
 }
 
 func GetYears() ([]int, error) {

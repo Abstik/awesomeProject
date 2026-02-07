@@ -48,5 +48,18 @@ func InitDatabaseConnector() error {
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: zapLogger,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 配置连接池
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	return nil
 }

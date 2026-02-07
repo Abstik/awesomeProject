@@ -1,7 +1,7 @@
 package model
 
 type IntroductionPO struct {
-	Id      int    `gorm:"primaryKey;column:id" json:"-"`
+	ID      int    `gorm:"primaryKey;column:id" json:"-"`
 	Content string `gorm:"column:content" json:"introduction"`
 }
 

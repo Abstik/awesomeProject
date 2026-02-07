@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
-	"awesomeProject/dao"
 	"awesomeProject/model"
 	"awesomeProject/service"
 	"awesomeProject/utils"
@@ -19,13 +20,17 @@ func GetActivityById(c *gin.Context) {
 	}
 	aidInt, err := strconv.ParseInt(aid, 10, 64)
 	if err != nil {
-		utils.BuildErrorResponse(c, 400, "aid is not valid")
+		utils.BuildErrorResponse(c, 400, "aid 参数格式有误")
 		return
 	}
 
 	res, err := service.GetActivityByAid(aidInt)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "GetActivityById err err is: "+err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.BuildErrorResponse(c, 404, "活动不存在")
+			return
+		}
+		utils.BuildServerError(c, "查询活动失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, res)
@@ -36,13 +41,13 @@ func AddActivity(c *gin.Context) {
 	var addActivityReq *model.ActivityReq
 	err := c.ShouldBindJSON(&addActivityReq)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "AddActivity format error, error is "+err.Error())
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
 
 	err = service.AddActivity(addActivityReq)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "AddActivity Failed error is "+err.Error())
+		utils.BuildServerError(c, "添加活动失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, "添加成功")
@@ -57,18 +62,18 @@ func GetActivityList(c *gin.Context) {
 		// 如果指定了分页参数
 		pageSizeInt, err := strconv.Atoi(pageSize)
 		if err != nil {
-			utils.BuildErrorResponse(c, 400, "pageSize not valid")
+			utils.BuildErrorResponse(c, 400, "pageSize 参数格式有误")
 			return
 		}
 		pageNumInt, err := strconv.Atoi(pageNum)
 		if err != nil {
-			utils.BuildErrorResponse(c, 400, "pageNum not valid")
+			utils.BuildErrorResponse(c, 400, "pageNum 参数格式有误")
 			return
 		}
 
-		res, total, err := service.GetActivityList(&pageSizeInt, &pageNumInt)
+		res, total, err := service.GetActivityList(pageSizeInt, pageNumInt)
 		if err != nil {
-			utils.BuildErrorResponse(c, 500, "GetActivityList err err is: "+err.Error())
+			utils.BuildServerError(c, "查询活动列表失败", err)
 			return
 		}
 		utils.BuildSuccessResponse(c, gin.H{
@@ -77,7 +82,7 @@ func GetActivityList(c *gin.Context) {
 		})
 		return
 	} else {
-		utils.BuildErrorResponse(c, 400, "pageSize or pageNum is not valid")
+		utils.BuildErrorResponse(c, 400, "pageSize 和 pageNum 为必传参数")
 		return
 	}
 }
@@ -86,17 +91,17 @@ func UpdateActivity(c *gin.Context) {
 	var activityReq *model.ActivityReq
 	err := c.ShouldBindJSON(&activityReq)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "UpdateActivity format error, error is "+err.Error())
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
 	if activityReq.AID == 0 {
-		utils.BuildErrorResponse(c, 400, "aid is not valid")
+		utils.BuildErrorResponse(c, 400, "aid 参数无效")
 		return
 	}
 
 	err = service.UpdateActivity(activityReq)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "UpdateActivity Failed error is "+err.Error())
+		utils.BuildServerError(c, "更新活动失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, "更新成功")
@@ -108,9 +113,13 @@ func DeleteActivity(c *gin.Context) {
 		utils.BuildErrorResponse(c, 400, "aid 为必传参数 请传递aid")
 		return
 	}
-	aid, _ := strconv.ParseInt(aidStr, 10, 64)
-	if err := dao.DeleteActivity(aid); err != nil {
-		utils.BuildErrorResponse(c, 500, "DeleteActivity Failed error is "+err.Error())
+	aid, err := strconv.ParseInt(aidStr, 10, 64)
+	if err != nil {
+		utils.BuildErrorResponse(c, 400, "aid 参数格式有误")
+		return
+	}
+	if err := service.DeleteActivity(aid); err != nil {
+		utils.BuildServerError(c, "删除活动失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, "删除成功")

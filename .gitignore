@@ -1,6 +1,11 @@
 .idea
 img.png
 *.md
+!CLAUDE.md
 logs
 res
 videos
+.env
+*.sql
+db_prod/
+main

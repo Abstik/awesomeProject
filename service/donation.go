@@ -7,24 +7,19 @@ import (
 	"awesomeProject/model"
 )
 
-func AddDonation(req model.AddDonationReq) error {
-	// 解析时间字符串为 time.Time
-	donationTime, err := time.Parse("2006-01-02 15:04:05", *req.Time)
+// GetDonations 查询捐款并计算总金额
+func GetDonations(year string) ([]model.DonationPO, float64, error) {
+	donations, err := dao.GetDonations(year)
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
-
-	// 构造 DonationPO 对象
-	donation := model.DonationPO{
-		Name:   req.Name,
-		Team:   req.Team,
-		Money:  req.Money,
-		Time:   &donationTime,
-		Remark: req.Remark,
+	var totalCount float64
+	for _, d := range donations {
+		if d.Money != nil {
+			totalCount += *d.Money
+		}
 	}
-
-	// 调用 DAO 层插入记录
-	return dao.InsertDonation(donation)
+	return donations, totalCount, nil
 }
 
 func AddDonations(req model.AddDonationsReq) error {
@@ -47,4 +42,9 @@ func AddDonations(req model.AddDonationsReq) error {
 
 	// 调用 DAO 层批量插入
 	return dao.BulkInsertDonations(donations)
+}
+
+// DeleteDonation 删除捐款
+func DeleteDonation(id int) error {
+	return dao.DeleteDonation(id)
 }

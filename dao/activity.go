@@ -29,12 +29,11 @@ func GetActivityList() ([]*model.ActivityPO, error) {
 }
 
 func GetActivityByAid(aid int64) (*model.ActivityPO, error) {
-	var res *model.ActivityPO
-	dbRes := db.Model(&model.ActivityPO{}).Where("aid = ?", aid).Find(&res)
-	if dbRes.Error != nil {
-		return nil, dbRes.Error
+	var res model.ActivityPO
+	if err := db.Where("aid = ?", aid).First(&res).Error; err != nil {
+		return nil, err
 	}
-	return res, nil
+	return &res, nil
 }
 
 func InsertActivity(activity *model.ActivityPO) error {

@@ -3,6 +3,8 @@ package dao
 import (
 	"fmt"
 
+	"gorm.io/gorm"
+
 	"awesomeProject/model"
 )
 
@@ -34,8 +36,8 @@ func GetMemberList(team *string, isGraduate, pageSize, pageNum, year *int) ([]mo
 		return nil, 0, err
 	}
 
-	// 重新构造分页查询（从 baseQuery 克隆一份）
-	query := baseQuery
+	// 使用独立会话避免 Count 的 SELECT 污染后续 Find
+	query := baseQuery.Session(&gorm.Session{})
 	if pageSize != nil && pageNum != nil {
 		query = query.Limit(*pageSize).Offset((*pageNum - 1) * (*pageSize))
 	}
@@ -60,21 +62,11 @@ func GetMemberByUsername(userName string) (*model.MemberPO, error) {
 
 func GetMemberByName(name string) ([]model.MemberPO, error) {
 	var members []model.MemberPO
-	result := db.Where("name LIKE ?", "%"+name+"%").Find(&members)
+	result := db.Where("name LIKE ? AND status != 0", "%"+name+"%").Find(&members)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return members, nil
-}
-
-// 根据 UID 查询用户
-func GetMemberByUID(uid int) (*model.MemberPO, error) {
-	var member model.MemberPO
-	result := db.Where("uid = ?", uid).First(&member)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &member, nil
 }
 
 // 更新用户信息
@@ -86,7 +78,7 @@ func UpdateMember(member *model.MemberPO) error {
 
 	// 如果未更新任何记录，返回错误
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("no record found to update")
+		return fmt.Errorf("未找到可更新的记录")
 	}
 
 	return nil
@@ -119,7 +111,7 @@ func ResetPassword(username, password string) error {
 
 	// 如果未更新任何记录，返回错误
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("no record found to update")
+		return fmt.Errorf("未找到可更新的记录")
 	}
 
 	return nil

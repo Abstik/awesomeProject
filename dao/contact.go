@@ -12,5 +12,5 @@ func GetContact() (*model.ContactPO, error) {
 }
 
 func UpdateContact(contact *model.ContactPO) error {
-	return db.Select("contact_info").Save(contact).Error
+	return db.Model(&model.ContactPO{}).Where("id = ?", 1).Update("contact_info", contact.ContactInfo).Error
 }

@@ -1,7 +1,7 @@
 package model
 
 type ContactPO struct {
-	Tid         int    `gorm:"primaryKey;column:id" json:"-"`
+	ID          int    `gorm:"primaryKey;column:id" json:"-"`
 	ContactInfo string `gorm:"column:contact_info" json:"qqnumber"`
 }
 

@@ -15,12 +15,13 @@ func UpdateIntroduction(c *gin.Context) {
 	var introduction *model.IntroductionPO
 	err := c.ShouldBindJSON(&introduction)
 	if err != nil {
-		utils.BuildErrorResponse(c, 400, "UpdateIntroduction format error, error is "+err.Error())
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
+		return
 	}
 
-	introduction.Id = 1
 	if err := dao.UpdateIntroduction(introduction); err != nil {
-		utils.BuildErrorResponse(c, 500, "UpdateIntroduction failed err is: "+err.Error())
+		utils.BuildServerError(c, "更新简介失败", err)
+		return
 	}
 	utils.BuildSuccessResponse(c, "更新成功")
 }
@@ -28,7 +29,7 @@ func UpdateIntroduction(c *gin.Context) {
 func GetIntroduction(c *gin.Context) {
 	introduction, err := dao.GetIntroduction()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		utils.BuildErrorResponse(c, 500, "查询失败")
+		utils.BuildServerError(c, "查询简介失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, introduction)

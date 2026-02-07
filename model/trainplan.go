@@ -1,10 +1,10 @@
 package model
 
-type TrainPlan struct {
-	ID      uint    `gorm:"primarykey" json:"-"`
-	Content *string `gorm:"content" json:"content"`
+type TrainPlanPO struct {
+	ID      int    `gorm:"primaryKey;column:id" json:"-"`
+	Content string `gorm:"column:content" json:"content" binding:"required"`
 }
 
-func (*TrainPlan) TableName() string {
+func (*TrainPlanPO) TableName() string {
 	return "train_plan"
 }

@@ -162,7 +162,7 @@ func stripBeforeRes(input string) string {
 	return input[idx:] // 从/res/开始截取
 }
 
-// 初始化全部成员的密码
+// 初始化全部成员的密码（使用 bcrypt）
 func InitAllMemberPassword() {
 	dsn := "root:325523@tcp(127.0.0.1:3306)/xiyoumobile_data?charset=utf8mb4&parseTime=True&loc=Local"
 	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
@@ -186,10 +186,14 @@ func InitAllMemberPassword() {
 			continue
 		}
 		rawPassword := *m.Username + utils.Rand5Digits()
-		encrypted := utils.EncryptPassword(rawPassword)
+		hashed, err := utils.HashPassword(rawPassword)
+		if err != nil {
+			log.Printf("用户 %s 密码哈希失败: %v", *m.Username, err)
+			continue
+		}
 
 		// 更新数据库
-		if err := db.Model(&model.MemberPO{}).Where("uid = ?", m.UID).Update("password", encrypted).Error; err != nil {
+		if err := db.Model(&model.MemberPO{}).Where("uid = ?", m.UID).Update("password", hashed).Error; err != nil {
 			log.Printf("更新用户 %s 密码失败: %v", *m.Username, err)
 			continue
 		}

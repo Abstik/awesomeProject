@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -24,9 +23,8 @@ const uploadDir = "./res/"
 func init() {
 	// 创建存储目录（如果不存在）
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-		err := os.MkdirAll(uploadDir, os.ModePerm)
-		if err != nil {
-			log.Fatalf("Failed to create upload directory: %v\n", err)
+		if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+			panic(fmt.Sprintf("无法创建图片存储目录: %v", err))
 		}
 	}
 }
@@ -36,14 +34,14 @@ func UploadImgWithWaterMark(c *gin.Context) {
 	// 获取上传的文件
 	file, err := c.FormFile("image")
 	if err != nil {
-		utils.BuildErrorResponse(c, 400, "Failed to get uploaded file")
+		utils.BuildErrorResponse(c, 400, "无法获取上传的图片文件")
 		return
 	}
 
 	// 打开上传的文件
 	srcFile, err := file.Open()
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "Failed to open uploaded file")
+		utils.BuildServerError(c, "打开上传文件失败", err)
 		return
 	}
 	defer srcFile.Close()
@@ -51,18 +49,18 @@ func UploadImgWithWaterMark(c *gin.Context) {
 	// 解码上传的图片（支持 JPEG 和 PNG）
 	img, format, err := image.Decode(srcFile)
 	if err != nil {
-		utils.BuildErrorResponse(c, 400, "Unsupported image format")
+		utils.BuildErrorResponse(c, 400, "不支持的图片格式")
 		return
 	}
 
-	// 构造目标文件名（随机生成，确保唯一性）
-	filename := fmt.Sprintf("%d.%s", time.Now().Unix(), format)
+	// 构造目标文件名（使用纳秒时间戳+随机数，确保唯一性）
+	filename := fmt.Sprintf("%d_%s.%s", time.Now().UnixNano(), utils.Rand5Digits(), format)
 	outputPath := filepath.Join(uploadDir, filename)
 
 	// 保存图片
 	outFile, err := os.Create(outputPath)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "Failed to save watermarked image")
+		utils.BuildServerError(c, "保存图片失败", err)
 		return
 	}
 	defer outFile.Close()
@@ -73,11 +71,11 @@ func UploadImgWithWaterMark(c *gin.Context) {
 	} else if format == "png" {
 		err = png.Encode(outFile, img)
 	} else {
-		utils.BuildErrorResponse(c, 400, "Unsupported image format")
+		utils.BuildErrorResponse(c, 400, "不支持的图片格式")
 		return
 	}
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "Failed to encode watermarked image")
+		utils.BuildServerError(c, "编码图片失败", err)
 		return
 	}
 
@@ -113,10 +111,22 @@ func DeleteImg(c *gin.Context) {
 	// 拼接本地文件路径
 	localPath := filepath.Join(".", parsedURL.Path) // 即 ./res/xxx.jpg
 
+	// 绝对路径二次校验，防止路径穿越
+	absLocal, err := filepath.Abs(localPath)
+	if err != nil {
+		utils.BuildErrorResponse(c, 400, "路径解析失败")
+		return
+	}
+	absRes, _ := filepath.Abs(uploadDir)
+	if !strings.HasPrefix(absLocal, absRes) {
+		utils.BuildErrorResponse(c, 400, "非法的资源路径")
+		return
+	}
+
 	// 删除文件
 	err = os.Remove(localPath)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "删除失败文件："+err.Error())
+		utils.BuildServerError(c, "删除图片失败", err)
 		return
 	}
 

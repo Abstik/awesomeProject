@@ -4,7 +4,7 @@ import "time"
 
 type ActivityPO struct {
 	AID     int64      `gorm:"primaryKey;column:aid" json:"aid"`
-	Title   *string    `gorm:"column:" json:"title"`
+	Title   *string    `gorm:"column:title" json:"title"`
 	Img     *string    `gorm:"column:img" json:"img"`
 	Summary *string    `gorm:"column:summary" json:"summary"`
 	Content *string    `gorm:"column:content" json:"content"`
@@ -17,15 +17,10 @@ func (*ActivityPO) TableName() string {
 	return "activity"
 }
 
-type ActivityListReq struct {
-	PageSize int64 `json:"pageSize,omitempty"`
-	PageNum  int64 `json:"pageNum,omitempty"`
-}
-
 type ActivityReq struct {
-	AID     int64   `gorm:"primaryKey;column:aid" json:"aid"`
-	Title   *string `gorm:"column:" json:"title"`
-	Img     *string `gorm:"column:img" json:"img"`
-	Summary *string `gorm:"column:summary" json:"summary"`
-	Content *string `gorm:"column:content" json:"content"`
+	AID     int64   `json:"aid"`
+	Title   *string `json:"title"`
+	Img     *string `json:"img"`
+	Summary *string `json:"summary"`
+	Content *string `json:"content"`
 }

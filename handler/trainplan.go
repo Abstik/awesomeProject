@@ -12,19 +12,15 @@ import (
 )
 
 func UpdateTrainPlan(c *gin.Context) {
-	var req model.TrainPlan
+	var req model.TrainPlanPO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.BuildErrorResponse(c, 500, "UpdateTrainPlan parse failed err is: "+err.Error())
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
 
-	if req.Content == nil {
-		utils.BuildErrorResponse(c, 400, "UpdateTrainPlan content is nil")
-	}
-
-	err := dao.UpdateTrainPlan(req)
+	err := dao.UpdateTrainPlan(&req)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "UpdateTrainPlan failed err is: "+err.Error())
+		utils.BuildServerError(c, "更新培养计划失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, "更新成功")
@@ -33,7 +29,7 @@ func UpdateTrainPlan(c *gin.Context) {
 func GetTrainPlan(c *gin.Context) {
 	trainPlan, err := dao.GetTrainPlan()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		utils.BuildErrorResponse(c, 500, "查询失败")
+		utils.BuildServerError(c, "查询培养计划失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, trainPlan)

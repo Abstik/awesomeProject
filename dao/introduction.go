@@ -1,20 +1,16 @@
 package dao
 
-import (
-	"awesomeProject/model"
-)
-
-func UpdateIntroduction(introduction *model.IntroductionPO) error {
-	return db.Model(introduction).
-		Where("id = ?", introduction.Id).
-		Update("content", introduction.Content).Error
-}
+import "awesomeProject/model"
 
 func GetIntroduction() (*model.IntroductionPO, error) {
-	var Introduction model.IntroductionPO
-	err := db.First(&Introduction).Error
+	var introduction model.IntroductionPO
+	err := db.First(&introduction).Error
 	if err != nil {
 		return nil, err
 	}
-	return &Introduction, nil
+	return &introduction, nil
+}
+
+func UpdateIntroduction(introduction *model.IntroductionPO) error {
+	return db.Model(&model.IntroductionPO{}).Where("id = ?", 1).Update("content", introduction.Content).Error
 }

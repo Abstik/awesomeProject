@@ -18,7 +18,6 @@ import (
 	"go.uber.org/zap"
 
 	"awesomeProject/dao"
-	"awesomeProject/middleware"
 	"awesomeProject/router"
 	"awesomeProject/utils"
 )
@@ -42,24 +41,24 @@ func main() {
 
 	// 初始化日志
 	utils.InitLogger()
-	// 替换全局zap全局Logger
-	zap.ReplaceGlobals(utils.Logger)
 
 	// 初始化MySQL连接
 	err := dao.InitDatabaseConnector()
 	if err != nil {
-		panic("db init failed error: " + err.Error())
+		zap.L().Fatal("数据库初始化失败", zap.Error(err))
 	}
 
 	// 初始化Gin
 	r := gin.New()
+	// 限制上传文件大小为 100MB
+	r.MaxMultipartMemory = 100 << 20
 	// 使用 zap 替代gin日志的中间件
 	r.Use(
 		ginzap.Ginzap(zap.L(), time.RFC3339, true), // 访问日志
 		ginzap.RecoveryWithZap(zap.L(), true),      // panic恢复日志
 	)
-	// 设置日志中间件
-	r.Use(middleware.ZapLoggerMiddleware())
+
+	// todo 配置跨域
 	r.Use(cors.New(cors.Config{
 		// 允许的域名（前端地址）
 		AllowOrigins: []string{"*"}, // 允许所有源
@@ -67,8 +66,6 @@ func main() {
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		// 允许的请求头
 		AllowHeaders: []string{"Content-Type", "Authorization"},
-		// 允许携带认证信息
-		AllowCredentials: true,
 	}))
 
 	// 配置静态资源访问
@@ -80,17 +77,18 @@ func main() {
 
 	// 自定义 http.Server（允许上传长时间连接）
 	srv := &http.Server{
-		Addr:           ":8080",
-		Handler:        r,
-		ReadTimeout:    0,       // 不限制读取时间
-		WriteTimeout:   0,       // 不限制写入时间
-		MaxHeaderBytes: 1 << 20, // 防止 header 攻击
+		Addr:              ":8080",
+		Handler:           r,
+		ReadHeaderTimeout: 10 * time.Second, // 防止 Slowloris 慢速攻击
+		ReadTimeout:       0,                // 不限制读取时间（上传场景）
+		WriteTimeout:      0,                // 不限制写入时间
+		MaxHeaderBytes:    1 << 20,          // 防止 header 攻击
 	}
 
 	// 异步启动
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			zap.L().Fatal("server run failed", zap.Error(err))
+			zap.L().Fatal("服务启动失败", zap.Error(err))
 		}
 	}()
 
@@ -102,6 +100,6 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		zap.L().Fatal("Server forced to shutdown:", zap.Error(err))
+		zap.L().Fatal("服务强制关闭", zap.Error(err))
 	}
 }

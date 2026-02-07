@@ -1,14 +1,16 @@
 package dao
 
-import (
-	"awesomeProject/model"
-)
+import "awesomeProject/model"
 
-func UpdateTrainPlan(req model.TrainPlan) error {
-	return db.Model(&model.TrainPlan{}).Where("id = ?", 1).Update("content", req.Content).Error
+func GetTrainPlan() (*model.TrainPlanPO, error) {
+	var trainPlan model.TrainPlanPO
+	err := db.First(&trainPlan).Error
+	if err != nil {
+		return nil, err
+	}
+	return &trainPlan, nil
 }
 
-func GetTrainPlan() (model.TrainPlan, error) {
-	var trainPlan model.TrainPlan
-	return trainPlan, db.Model(&model.TrainPlan{}).First(&trainPlan).Error
+func UpdateTrainPlan(trainPlan *model.TrainPlanPO) error {
+	return db.Model(&model.TrainPlanPO{}).Where("id = ?", 1).Update("content", trainPlan.Content).Error
 }

@@ -17,23 +17,32 @@ func AddTeam(req model.AddTeamReq) error {
 	return dao.InsertTeam(team)
 }
 
-func GetTeams(name string, isExist *bool, isUser bool) ([]model.TeamPO, error) {
+func GetTeams(name string, isExist *bool, isUser bool) ([]model.TeamVO, error) {
 	teamPOs, err := dao.QueryTeams(name, isExist, isUser)
 	if err != nil {
 		return nil, err
 	}
 
+	teamVOs := make([]model.TeamVO, len(teamPOs))
 	delay := 0
 	for i := range teamPOs {
-		if *teamPOs[i].IsExist {
-			teamPOs[i].Delay = delay
+		teamVOs[i].TeamPO = teamPOs[i]
+		if teamPOs[i].IsExist != nil && *teamPOs[i].IsExist {
+			teamVOs[i].Delay = delay
 			delay += 100
 		}
 	}
 
-	return teamPOs, nil
+	return teamVOs, nil
 }
 
 func UpdateTeam(req model.AddTeamReq) error {
-	return dao.UpdateTeam(req)
+	team := &model.TeamPO{
+		Tid:       req.Tid,
+		Name:      req.Name,
+		BrefInfo:  req.BrefInfo,
+		TrainPlan: req.TrainPlan,
+		IsExist:   req.IsExist,
+	}
+	return dao.UpdateTeam(team)
 }

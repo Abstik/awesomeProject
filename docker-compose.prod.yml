@@ -8,7 +8,7 @@ services:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - DB_NAME=${MYSQL_DATABASE}
       - GO_ENV=${GO_ENV}
       - DOMAIN_NAME=${DOMAIN_NAME}
       - DEFAULT_PORTRAIT=${DEFAULT_PORTRAIT}
@@ -22,6 +22,7 @@ services:
       app-network:
         aliases:
           - backend
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -59,10 +60,13 @@ services:
       - ./db_prod/:/docker-entrypoint-initdb.d/
     networks:
       - app-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   mysql_prod_data:

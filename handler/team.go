@@ -14,14 +14,14 @@ import (
 func AddTeam(c *gin.Context) {
 	req := model.AddTeamReq{}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.BuildErrorResponse(c, 500, "AddTeam parse failed err is: "+err.Error())
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
 		return
 	}
 
 	// 调用 service 层
 	err := service.AddTeam(req)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "AddTeam insert failed err is: "+err.Error())
+		utils.BuildServerError(c, "添加团队失败", err)
 		return
 	}
 
@@ -41,7 +41,7 @@ func GetTeams(c *gin.Context) {
 
 	// 用户校验
 	var err error
-	var teams []model.TeamPO
+	var teams []model.TeamVO
 	_, ok := c.Get("userID")
 	if !ok {
 		// 如果是游客
@@ -51,7 +51,7 @@ func GetTeams(c *gin.Context) {
 		teams, err = service.GetTeams(name, isExist, true)
 	}
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		utils.BuildErrorResponse(c, 500, "查询失败")
+		utils.BuildServerError(c, "查询团队失败", err)
 		return
 	}
 	utils.BuildSuccessResponse(c, teams)
@@ -61,12 +61,14 @@ func GetTeams(c *gin.Context) {
 func UpdateTeam(c *gin.Context) {
 	req := model.AddTeamReq{}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.BuildErrorResponse(c, 500, "UpdateTeam parse failed err is: "+err.Error())
+		utils.BuildErrorResponse(c, 400, "参数格式有误")
+		return
 	}
 
 	err := service.UpdateTeam(req)
 	if err != nil {
-		utils.BuildErrorResponse(c, 500, "UpdateTeam update failed err is: "+err.Error())
+		utils.BuildServerError(c, "更新团队失败", err)
+		return
 	}
 	utils.BuildSuccessResponse(c, "更新成功")
 }
