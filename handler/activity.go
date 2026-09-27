@@ -119,6 +119,10 @@ func DeleteActivity(c *gin.Context) {
 		return
 	}
 	if err := service.DeleteActivity(aid); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.BuildErrorResponse(c, 404, "活动不存在")
+			return
+		}
 		utils.BuildServerError(c, "删除活动失败", err)
 		return
 	}
