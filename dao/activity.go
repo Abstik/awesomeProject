@@ -1,6 +1,10 @@
 package dao
 
-import "awesomeProject/model"
+import (
+	"gorm.io/gorm"
+
+	"awesomeProject/model"
+)
 
 func GetActivityListByPage(pageSize, pageNum int) ([]*model.ActivityPO, int64, error) {
 	var res []*model.ActivityPO
@@ -48,5 +52,11 @@ func UpdateActivity(activity *model.ActivityPO) error {
 
 func DeleteActivity(aid int64) error {
 	result := db.Model(&model.ActivityPO{}).Where("aid = ?", aid).Delete(&model.ActivityPO{})
-	return result.Error
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
