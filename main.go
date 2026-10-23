@@ -48,6 +48,9 @@ func main() {
 		zap.L().Fatal("数据库初始化失败", zap.Error(err))
 	}
 
+	if err := dao.MigrateAnnualExpenses(); err != nil {
+		zap.L().Fatal("年度支出表初始化失败", zap.Error(err))
+	}
 	// 初始化Gin
 	r := gin.New()
 	// 限制上传文件大小为 100MB

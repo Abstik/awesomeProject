@@ -14,7 +14,10 @@ var db *gorm.DB
 
 // 开启数据库连接
 func InitDatabaseConnector() error {
-	dsn := "root:325523@tcp(127.0.0.1:3306)/xiyoumobile_data?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := os.Getenv("DB_DSN")
+	if dsn == "" {
+		dsn = "root:325523@tcp(127.0.0.1:3306)/xiyoumobile_data?charset=utf8mb4&parseTime=True&loc=Local"
+	}
 	// todo 部署到服务器后，使用以下配置
 	//dsn := fmt.Sprintf("root:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True",
 	//	os.Getenv("DB_PASSWORD"), // 密码
