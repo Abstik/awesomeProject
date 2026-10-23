@@ -14,6 +14,10 @@ func SetupRouter(router *gin.Engine) *gin.Engine {
 
 func SetupRegisterRouter(r *gin.Engine) {
 	apiGroup := r.Group("/xupt-web/api")
+	apiGroup.GET("/annual-expense/years", middleware.JWTAuthMiddleware(), handler.ListAnnualExpenseYears)
+	apiGroup.GET("/annual-expense", middleware.JWTAuthMiddleware(), handler.GetAnnualExpense)
+	apiGroup.PUT("/annual-expense", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.SaveAnnualExpense)
+	apiGroup.DELETE("/annual-expense", middleware.JWTAuthMiddleware(), middleware.IsAdminAuthMiddleware(), handler.DeleteAnnualExpense)
 	{
 		// 生成验证码
 		apiGroup.GET("/captcha", handler.GetCaptcha)
